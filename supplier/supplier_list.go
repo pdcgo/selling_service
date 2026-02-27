@@ -43,10 +43,10 @@ func (s *supplierServiceImpl) SupplierList(
 		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 			query := db.
 				Model(&Supplier{}).
-				Joins("JOIN selling_supplier_customs c ON c.supplier_id = selling_suppliers.id AND c.deleted_at IS NULL").
-				Where("selling_suppliers.team_id = ?", pay.TeamId).
-				Where("selling_suppliers.type = ?", pay.Type).
-				Select("selling_suppliers.id, selling_suppliers.team_id, c.name, c.contact, c.description")
+				Joins("JOIN supplier_customs c ON c.supplier_id = suppliers.id AND c.deleted_at IS NULL").
+				Where("suppliers.team_id = ?", pay.TeamId).
+				Where("suppliers.type = ?", pay.Type).
+				Select("suppliers.id, suppliers.team_id, c.name, c.contact, c.description")
 
 			if pay.Q != "" {
 				q := "%" + strings.ToLower(pay.Q) + "%"
@@ -59,7 +59,7 @@ func (s *supplierServiceImpl) SupplierList(
 			return nil, err
 		}
 
-		err = paginated.Order("selling_suppliers.id DESC").Find(&rows).Error
+		err = paginated.Order("suppliers.id DESC").Find(&rows).Error
 		if err != nil {
 			return nil, err
 		}
@@ -96,10 +96,10 @@ func (s *supplierServiceImpl) SupplierList(
 		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 			query := db.
 				Model(&Supplier{}).
-				Joins("JOIN selling_supplier_marketplaces m ON m.supplier_id = selling_suppliers.id AND m.deleted_at IS NULL").
-				Where("selling_suppliers.team_id = ?", pay.TeamId).
-				Where("selling_suppliers.type = ?", pay.Type).
-				Select("selling_suppliers.id, selling_suppliers.team_id, m.mp_type, m.name, m.uri, m.description")
+				Joins("JOIN supplier_marketplaces m ON m.supplier_id = suppliers.id AND m.deleted_at IS NULL").
+				Where("suppliers.team_id = ?", pay.TeamId).
+				Where("suppliers.type = ?", pay.Type).
+				Select("suppliers.id, suppliers.team_id, m.mp_type, m.name, m.uri, m.description")
 
 			if pay.Q != "" {
 				q := "%" + strings.ToLower(pay.Q) + "%"
@@ -112,7 +112,7 @@ func (s *supplierServiceImpl) SupplierList(
 			return nil, err
 		}
 
-		err = paginated.Order("selling_suppliers.id DESC").Find(&rows).Error
+		err = paginated.Order("suppliers.id DESC").Find(&rows).Error
 		if err != nil {
 			return nil, err
 		}
