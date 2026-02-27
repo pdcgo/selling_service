@@ -6,6 +6,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/pdcgo/schema/services/selling_iface/v1/selling_ifaceconnect"
 	"github.com/pdcgo/selling_service/services"
+	"github.com/pdcgo/selling_service/supplier"
 	"github.com/pdcgo/shared/custom_connect"
 	"github.com/pdcgo/shared/interfaces/authorization_iface"
 	"github.com/pdcgo/shared/pkg/ware_cache"
@@ -33,6 +34,13 @@ func NewRegister(
 		)
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.ConfigurationLimitServiceName)
+
+		path, handler = selling_ifaceconnect.NewSupplierServiceHandler(
+			supplier.NewSupplierService(db),
+			defaultInterceptor,
+		)
+		mux.Handle(path, handler)
+		grpcReflects = append(grpcReflects, selling_ifaceconnect.SupplierServiceName)
 
 		return grpcReflects
 	}

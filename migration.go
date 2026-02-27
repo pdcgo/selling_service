@@ -1,6 +1,7 @@
 package selling_service
 
 import (
+	"github.com/pdcgo/selling_service/supplier"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
@@ -12,6 +13,9 @@ func NewMigrationHandler(db *gorm.DB) MigrationHandler {
 
 		err := db.AutoMigrate(
 			&db_models.OweLimitConfiguration{},
+			&supplier.Supplier{},
+			&supplier.SupplierCustom{},
+			&supplier.SupplierMarketplace{},
 		)
 		return err
 	}
