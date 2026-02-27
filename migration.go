@@ -6,10 +6,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type MigrationHandler func() error
+type MigrationHandler func(db *gorm.DB) error
 
-func NewMigrationHandler(db *gorm.DB) MigrationHandler {
-	return func() error {
+func NewMigrationHandler() MigrationHandler {
+	return func(db *gorm.DB) error {
 
 		err := db.AutoMigrate(
 			&db_models.OweLimitConfiguration{},
