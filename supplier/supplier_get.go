@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/schema/services/common/v1"
+	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"gorm.io/gorm"
 )
 
@@ -70,7 +70,8 @@ func (s *supplierServiceImpl) SupplierGet(
 		result.Data.Data = &selling_iface.Supplier_Marketplace{
 			Marketplace: &selling_iface.SupplierMarketplace{
 				MpType:      common.MarketplaceType(mp.MpType),
-				Name:        mp.Name,
+				ShopName:    mp.ShopName,
+				ProductName: mp.ProductName,
 				Uri:         mp.URI,
 				Description: mp.Description,
 			},

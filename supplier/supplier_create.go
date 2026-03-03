@@ -27,7 +27,8 @@ type SupplierCustom struct {
 type SupplierMarketplace struct {
 	SupplierID  uint64         `gorm:"primaryKey"`
 	MpType      int32          `gorm:"not null"`
-	Name        string         `gorm:"not null;size:200"`
+	ShopName    string         `gorm:"not null;size:200;default:''"`
+	ProductName string         `gorm:"not null;size:200;default:''"`
 	URI         string         `gorm:"not null;size:500"`
 	Description string         `gorm:"not null;size:500"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -98,7 +99,8 @@ func (s *supplierServiceImpl) SupplierCreate(
 			marketplace := &SupplierMarketplace{
 				SupplierID:  supplier.ID,
 				MpType:      int32(payload.Marketplace.MpType),
-				Name:        payload.Marketplace.Name,
+				ShopName:    payload.Marketplace.ShopName,
+				ProductName: payload.Marketplace.ProductName,
 				URI:         payload.Marketplace.Uri,
 				Description: payload.Marketplace.Description,
 			}
@@ -111,7 +113,8 @@ func (s *supplierServiceImpl) SupplierCreate(
 			result.Data.Data = &selling_iface.Supplier_Marketplace{
 				Marketplace: &selling_iface.SupplierMarketplace{
 					MpType:      payload.Marketplace.MpType,
-					Name:        marketplace.Name,
+					ShopName:    marketplace.ShopName,
+					ProductName: marketplace.ProductName,
 					Uri:         marketplace.URI,
 					Description: marketplace.Description,
 				},

@@ -87,7 +87,8 @@ func (s *supplierServiceImpl) SupplierList(
 			ID          uint64 `gorm:"column:id"`
 			TeamID      uint64 `gorm:"column:team_id"`
 			MpType      int32  `gorm:"column:mp_type"`
-			Name        string `gorm:"column:name"`
+			ShopName    string `gorm:"column:shop_name"`
+			ProductName string `gorm:"column:product_name"`
 			URI         string `gorm:"column:uri"`
 			Description string `gorm:"column:description"`
 		}
@@ -99,11 +100,11 @@ func (s *supplierServiceImpl) SupplierList(
 				Joins("JOIN supplier_marketplaces m ON m.supplier_id = suppliers.id AND m.deleted_at IS NULL").
 				Where("suppliers.team_id = ?", pay.TeamId).
 				Where("suppliers.type = ?", pay.Type).
-				Select("suppliers.id, suppliers.team_id, m.mp_type, m.name, m.uri, m.description")
+				Select("suppliers.id, suppliers.team_id, m.mp_type, m.shop_name, m.product_name, m.uri, m.description")
 
 			if pay.Q != "" {
 				q := "%" + strings.ToLower(pay.Q) + "%"
-				query = query.Where("(lower(m.name) LIKE ? OR lower(m.uri) LIKE ? OR lower(m.description) LIKE ?)", q, q, q)
+				query = query.Where("(lower(m.shop_name) LIKE ? OR lower(m.product_name) LIKE ? OR lower(m.uri) LIKE ? OR lower(m.description) LIKE ?)", q, q, q)
 			}
 
 			return query, nil
@@ -128,7 +129,8 @@ func (s *supplierServiceImpl) SupplierList(
 				Data: &selling_iface.Supplier_Marketplace{
 					Marketplace: &selling_iface.SupplierMarketplace{
 						MpType:      common.MarketplaceType(row.MpType),
-						Name:        row.Name,
+						ShopName:    row.ShopName,
+						ProductName: row.ProductName,
 						Uri:         row.URI,
 						Description: row.Description,
 					},

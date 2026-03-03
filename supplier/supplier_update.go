@@ -80,7 +80,8 @@ func (s *supplierServiceImpl) SupplierUpdate(
 				Where("supplier_id = ?", base.ID).
 				Updates(map[string]any{
 					"mp_type":      int32(common.MarketplaceType(data.Marketplace.MpType)),
-					"name":         data.Marketplace.Name,
+					"shop_name":    data.Marketplace.ShopName,
+					"product_name": data.Marketplace.ProductName,
 					"uri":          data.Marketplace.Uri,
 					"description":  data.Marketplace.Description,
 				}).
