@@ -104,7 +104,7 @@ func (s *supplierServiceImpl) SupplierList(
 
 			if pay.Q != "" {
 				q := "%" + strings.ToLower(pay.Q) + "%"
-				query = query.Where("(lower(m.shop_name) LIKE ? OR lower(m.product_name) LIKE ? OR lower(m.uri) LIKE ? OR lower(m.description) LIKE ?)", q, q, q)
+				query = query.Where("(lower(m.shop_name) LIKE ? OR lower(m.product_name) LIKE ? OR lower(m.uri) LIKE ? OR lower(m.description) LIKE ?)", q, q, q, q)
 			}
 
 			return query, nil
