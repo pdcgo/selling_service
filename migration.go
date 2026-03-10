@@ -16,6 +16,8 @@ func NewMigrationHandler() MigrationHandler {
 			&supplier.Supplier{},
 			&supplier.SupplierCustom{},
 			&supplier.SupplierMarketplace{},
+			&supplier.VariantSupplierV2{},
+			&supplier.SupplierInvTxItemV2{},
 		)
 		return err
 	}

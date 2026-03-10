@@ -3,9 +3,11 @@ package supplier
 import (
 	"context"
 	"errors"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
 
@@ -32,6 +34,27 @@ type SupplierMarketplace struct {
 	URI         string         `gorm:"not null;size:500"`
 	Description string         `gorm:"not null;size:500"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+type VariantSupplierV2 struct {
+	ID           uint          `json:"id" gorm:"primarykey"`
+	TeamID       uint          `json:"team_id"`
+	VariantID    uint          `json:"variant_id"`
+	SupplierID   uint          `json:"supplier_id"`
+	PreOrderTime time.Duration `json:"pre_order_time"`
+
+	Team     *db_models.Team           `json:"team,omitempty"`
+	Variant  *db_models.VariationValue `json:"variant,omitempty"`
+	Supplier *Supplier                 `json:"supplier,omitempty"`
+}
+
+type SupplierInvTxItemV2 struct {
+	ID          uint `json:"id" gorm:"primarykey"`
+	InvTxItemID uint `json:"inv_tx_item_id"`
+	SupplierID  uint `json:"supplier_id"`
+
+	Supplier  *Supplier            `json:"supplier"`
+	InvTxItem *db_models.InvTxItem `json:"inv_tx_item"`
 }
 
 // SupplierCreate implements [selling_ifaceconnect.SupplierServiceHandler].

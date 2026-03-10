@@ -2,13 +2,10 @@ package supplier
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
-	"gorm.io/gorm"
 )
 
 // SupplierGet implements [selling_ifaceconnect.SupplierServiceHandler].
@@ -19,65 +16,57 @@ func (s *supplierServiceImpl) SupplierGet(
 	pay := req.Msg
 	db := s.db.WithContext(ctx)
 
-	base := Supplier{}
-	err := db.
-		Where("id = ?", pay.Id).
-		Where("type = ?", pay.Type).
-		First(&base).
-		Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("supplier not found id=%d type=%s", pay.Id, pay.Type.String()))
+	result := &selling_iface.SupplierGetResponse{
+		Data: []*selling_iface.Supplier{},
 	}
+
+	type row struct {
+		*Supplier
+		Custom      *SupplierCustom      `gorm:"foreignKey:SupplierID;references:ID"`
+		Marketplace *SupplierMarketplace `gorm:"foreignKey:SupplierID;references:ID"`
+	}
+
+	var rows []*row
+	err := db.
+		Table("suppliers").
+		Preload("Custom").
+		Preload("Marketplace").
+		Where("id IN ?", pay.Ids).
+		Find(&rows).
+		Error
 	if err != nil {
 		return nil, err
 	}
 
-	result := &selling_iface.SupplierGetResponse{
-		Data: &selling_iface.Supplier{
-			Id:     base.ID,
-			TeamId: base.TeamID,
-		},
-	}
-
-	switch pay.Type {
-	case selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM:
-		custom := SupplierCustom{}
-		err = db.Where("supplier_id = ?", base.ID).First(&custom).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("custom supplier detail not found for id=%d", pay.Id))
-		}
-		if err != nil {
-			return nil, err
+	for _, row := range rows {
+		supplier := selling_iface.Supplier{
+			Id:     row.ID,
+			TeamId: row.TeamID,
 		}
 
-		result.Data.Data = &selling_iface.Supplier_Custom{
-			Custom: &selling_iface.SupplierCustom{
-				Name:        custom.Name,
-				Contact:     custom.Contact,
-				Description: custom.Description,
-			},
-		}
-	case selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE:
-		mp := SupplierMarketplace{}
-		err = db.Where("supplier_id = ?", base.ID).First(&mp).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("marketplace supplier detail not found for id=%d", pay.Id))
-		}
-		if err != nil {
-			return nil, err
+		switch row.Type {
+		case selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM:
+			supplier.Data = &selling_iface.Supplier_Custom{
+				Custom: &selling_iface.SupplierCustom{
+					Name:        row.Custom.Name,
+					Contact:     row.Custom.Contact,
+					Description: row.Custom.Description,
+				},
+			}
+
+		case selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE:
+			supplier.Data = &selling_iface.Supplier_Marketplace{
+				Marketplace: &selling_iface.SupplierMarketplace{
+					MpType:      common.MarketplaceType(row.Marketplace.MpType),
+					ShopName:    row.Marketplace.ShopName,
+					ProductName: row.Marketplace.ProductName,
+					Uri:         row.Marketplace.URI,
+					Description: row.Marketplace.Description,
+				},
+			}
 		}
 
-		result.Data.Data = &selling_iface.Supplier_Marketplace{
-			Marketplace: &selling_iface.SupplierMarketplace{
-				MpType:      common.MarketplaceType(mp.MpType),
-				ShopName:    mp.ShopName,
-				ProductName: mp.ProductName,
-				Uri:         mp.URI,
-				Description: mp.Description,
-			},
-		}
-	default:
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unsupported supplier type: %s", pay.Type.String()))
+		result.Data = append(result.Data, &supplier)
 	}
 
 	return connect.NewResponse(result), nil
