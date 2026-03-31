@@ -1,7 +1,6 @@
 package selling_service
 
 import (
-	"github.com/pdcgo/selling_service/supplier"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
@@ -13,11 +12,11 @@ func NewMigrationHandler() MigrationHandler {
 
 		err := db.AutoMigrate(
 			&db_models.OweLimitConfiguration{},
-			&supplier.Supplier{},
-			&supplier.SupplierCustom{},
-			&supplier.SupplierMarketplace{},
-			&supplier.VariantSupplierV2{},
-			&supplier.SupplierInvTxItemV2{},
+			&db_models.Supplier{},
+			&db_models.SupplierCustom{},
+			&db_models.SupplierMarketplace{},
+			&db_models.VariantSupplierV2{},
+			&db_models.SupplierInvTxItemV2{},
 		)
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -25,7 +26,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 
 	db := s.db.WithContext(ctx)
 	err := db.Transaction(func(tx *gorm.DB) error {
-		base := Supplier{}
+		base := db_models.Supplier{}
 		err := tx.
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", pay.Data.Id).
@@ -43,7 +44,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 			updates["team_id"] = pay.Data.TeamId
 		}
 		if len(updates) > 0 {
-			if err := tx.Model(&Supplier{}).Where("id = ?", base.ID).Updates(updates).Error; err != nil {
+			if err := tx.Model(&db_models.Supplier{}).Where("id = ?", base.ID).Updates(updates).Error; err != nil {
 				return err
 			}
 		}
@@ -57,7 +58,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 				return connect.NewError(connect.CodeInvalidArgument, errors.New("custom payload is required"))
 			}
 
-			err := tx.Model(&SupplierCustom{}).
+			err := tx.Model(&db_models.SupplierCustom{}).
 				Where("supplier_id = ?", base.ID).
 				Updates(map[string]any{
 					"name":        data.Custom.Name,
@@ -76,7 +77,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 				return connect.NewError(connect.CodeInvalidArgument, errors.New("marketplace payload is required"))
 			}
 
-			err := tx.Model(&SupplierMarketplace{}).
+			err := tx.Model(&db_models.SupplierMarketplace{}).
 				Where("supplier_id = ?", base.ID).
 				Updates(map[string]any{
 					"mp_type":      int32(common.MarketplaceType(data.Marketplace.MpType)),

@@ -9,6 +9,7 @@ import (
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/shared/db_connect"
+	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
 
@@ -42,7 +43,7 @@ func (s *supplierServiceImpl) SupplierList(
 		var rows []*customRow
 		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 			query := db.
-				Model(&Supplier{}).
+				Model(&db_models.Supplier{}).
 				Joins("JOIN supplier_customs c ON c.supplier_id = suppliers.id AND c.deleted_at IS NULL").
 				Where("suppliers.team_id = ?", pay.TeamId).
 				Where("suppliers.type = ?", pay.Type).
@@ -96,7 +97,7 @@ func (s *supplierServiceImpl) SupplierList(
 		var rows []*marketplaceRow
 		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 			query := db.
-				Model(&Supplier{}).
+				Model(&db_models.Supplier{}).
 				Joins("JOIN supplier_marketplaces m ON m.supplier_id = suppliers.id AND m.deleted_at IS NULL").
 				Where("suppliers.team_id = ?", pay.TeamId).
 				Where("suppliers.type = ?", pay.Type).

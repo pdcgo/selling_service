@@ -6,6 +6,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/shared/db_models"
 )
 
 // SupplierGet implements [selling_ifaceconnect.SupplierServiceHandler].
@@ -21,9 +22,9 @@ func (s *supplierServiceImpl) SupplierGet(
 	}
 
 	type row struct {
-		*Supplier
-		Custom      *SupplierCustom      `gorm:"foreignKey:SupplierID;references:ID"`
-		Marketplace *SupplierMarketplace `gorm:"foreignKey:SupplierID;references:ID"`
+		*db_models.Supplier
+		Custom      *db_models.SupplierCustom      `gorm:"foreignKey:SupplierID;references:ID"`
+		Marketplace *db_models.SupplierMarketplace `gorm:"foreignKey:SupplierID;references:ID"`
 	}
 
 	var rows []*row
