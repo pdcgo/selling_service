@@ -17,6 +17,7 @@ func NewMigrationHandler() MigrationHandler {
 			&db_models.SupplierMarketplace{},
 			&db_models.VariantSupplierV2{},
 			&db_models.SupplierInvTxItemV2{},
+			&db_models.RestockSupplierTemp{},
 		)
 		return err
 	}
