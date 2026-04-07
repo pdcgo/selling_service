@@ -18,6 +18,8 @@ func NewMigrationHandler() MigrationHandler {
 			&db_models.VariantSupplierV2{},
 			&db_models.SupplierInvTxItemV2{},
 			&db_models.RestockSupplierTemp{},
+			&db_models.SupplierV2{},
+			&db_models.SupplierMarketplaceV2{},
 		)
 		return err
 	}

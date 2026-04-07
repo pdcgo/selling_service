@@ -24,122 +24,65 @@ func (s *supplierServiceImpl) SupplierList(
 	}
 
 	result := &selling_iface.SupplierListResponse{
-		Data:     []*selling_iface.Supplier{},
+		Data:     []*selling_iface.SupplierListItem{},
 		PageInfo: &common.PageInfo{},
 	}
 
 	db := s.db.WithContext(ctx)
 
-	switch pay.Type {
-	case selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM:
-		type customRow struct {
-			ID          uint64 `gorm:"column:id"`
-			TeamID      uint64 `gorm:"column:team_id"`
-			Name        string `gorm:"column:name"`
-			Contact     string `gorm:"column:contact"`
-			Description string `gorm:"column:description"`
-		}
+	var rows []*db_models.SupplierV2
+	paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
+		query := db.
+			Model(&db_models.SupplierV2{}).
+			Scopes(func(d *gorm.DB) *gorm.DB {
 
-		var rows []*customRow
-		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
-			query := db.
-				Model(&db_models.Supplier{}).
-				Joins("JOIN supplier_customs c ON c.supplier_id = suppliers.id AND c.deleted_at IS NULL").
-				Where("suppliers.team_id = ?", pay.TeamId).
-				Where("suppliers.type = ?", pay.Type).
-				Select("suppliers.id, suppliers.team_id, c.name, c.contact, c.description")
+				if pay.TeamId > 0 {
+					d = d.Where("team_id = ?", pay.TeamId)
+				}
 
-			if pay.Q != "" {
-				q := "%" + strings.ToLower(pay.Q) + "%"
-				query = query.Where("(lower(c.name) LIKE ? OR lower(c.contact) LIKE ? OR lower(c.description) LIKE ?)", q, q, q)
-			}
+				if pay.Province != "" {
+					d = d.Where("province = ?", pay.Province)
+				}
 
-			return query, nil
-		}, pay.Page)
-		if err != nil {
-			return nil, err
-		}
+				if pay.City != "" {
+					d = d.Where("city = ?", pay.City)
+				}
 
-		err = paginated.Order("suppliers.id DESC").Find(&rows).Error
-		if err != nil {
-			return nil, err
-		}
+				if pay.Q != "" {
+					q := "%" + strings.ToLower(pay.Q) + "%"
+					d = d.Where("(lower(code) LIKE ? OR lower(name) LIKE ? OR lower(contact) LIKE ? OR lower(description) LIKE ? OR lower(address) LIKE ?)", q, q, q, q, q)
+				}
 
-		result.PageInfo = pageInfo
-		for _, row := range rows {
-			if row == nil {
-				continue
-			}
-			result.Data = append(result.Data, &selling_iface.Supplier{
-				Id:     row.ID,
-				TeamId: row.TeamID,
-				Data: &selling_iface.Supplier_Custom{
-					Custom: &selling_iface.SupplierCustom{
-						Name:        row.Name,
-						Contact:     row.Contact,
-						Description: row.Description,
-					},
-				},
+				return d
 			})
+
+		return query, nil
+	}, pay.Page)
+	if err != nil {
+		return nil, err
+	}
+
+	err = paginated.Order("id DESC").Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result.PageInfo = pageInfo
+	for _, row := range rows {
+		if row == nil {
+			continue
 		}
-
-	case selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE:
-		type marketplaceRow struct {
-			ID          uint64 `gorm:"column:id"`
-			TeamID      uint64 `gorm:"column:team_id"`
-			MpType      int32  `gorm:"column:mp_type"`
-			ShopName    string `gorm:"column:shop_name"`
-			ProductName string `gorm:"column:product_name"`
-			URI         string `gorm:"column:uri"`
-			Description string `gorm:"column:description"`
-		}
-
-		var rows []*marketplaceRow
-		paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
-			query := db.
-				Model(&db_models.Supplier{}).
-				Joins("JOIN supplier_marketplaces m ON m.supplier_id = suppliers.id AND m.deleted_at IS NULL").
-				Where("suppliers.team_id = ?", pay.TeamId).
-				Where("suppliers.type = ?", pay.Type).
-				Select("suppliers.id, suppliers.team_id, m.mp_type, m.shop_name, m.product_name, m.uri, m.description")
-
-			if pay.Q != "" {
-				q := "%" + strings.ToLower(pay.Q) + "%"
-				query = query.Where("(lower(m.shop_name) LIKE ? OR lower(m.product_name) LIKE ? OR lower(m.uri) LIKE ? OR lower(m.description) LIKE ?)", q, q, q, q)
-			}
-
-			return query, nil
-		}, pay.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		err = paginated.Order("suppliers.id DESC").Find(&rows).Error
-		if err != nil {
-			return nil, err
-		}
-
-		result.PageInfo = pageInfo
-		for _, row := range rows {
-			if row == nil {
-				continue
-			}
-			result.Data = append(result.Data, &selling_iface.Supplier{
-				Id:     row.ID,
-				TeamId: row.TeamID,
-				Data: &selling_iface.Supplier_Marketplace{
-					Marketplace: &selling_iface.SupplierMarketplace{
-						MpType:      common.MarketplaceType(row.MpType),
-						ShopName:    row.ShopName,
-						ProductName: row.ProductName,
-						Uri:         row.URI,
-						Description: row.Description,
-					},
-				},
-			})
-		}
-	default:
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("unsupported supplier type"))
+		result.Data = append(result.Data, &selling_iface.SupplierListItem{
+			Id:          row.ID,
+			TeamId:      row.TeamID,
+			Code:        row.Code,
+			Name:        row.Name,
+			Contact:     row.Contact,
+			Description: row.Description,
+			Address:     row.Address,
+			Province:    row.Province,
+			City:        row.City,
+		})
 	}
 
 	return connect.NewResponse(result), nil

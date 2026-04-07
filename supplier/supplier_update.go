@@ -3,101 +3,94 @@ package supplier
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strconv"
+	"time"
 
 	"connectrpc.com/connect"
-	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 // SupplierUpdate implements [selling_ifaceconnect.SupplierServiceHandler].
 func (s *supplierServiceImpl) SupplierUpdate(
 	ctx context.Context, req *connect.Request[selling_iface.SupplierUpdateRequest]) (*connect.Response[selling_iface.SupplierUpdateResponse], error) {
+
 	pay := req.Msg
-	if pay.GetData() == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("supplier data is required"))
-	}
-	if pay.Data.GetId() == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("supplier id is required"))
-	}
-
 	db := s.db.WithContext(ctx)
-	err := db.Transaction(func(tx *gorm.DB) error {
-		base := db_models.Supplier{}
-		err := tx.
-			Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ?", pay.Data.Id).
-			First(&base).
+
+	if detailPay := req.Msg.GetDetail(); detailPay != nil {
+
+		err := db.
+			Model(db_models.SupplierV2{}).
+			Where("id = ?", pay.Id).
+			Updates(map[string]any{
+				"code":        detailPay.Code,
+				"name":        detailPay.Name,
+				"contact":     detailPay.Contact,
+				"province":    detailPay.Province,
+				"city":        detailPay.City,
+				"address":     detailPay.Address,
+				"description": detailPay.Description,
+			}).
 			Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return connect.NewError(connect.CodeNotFound, fmt.Errorf("supplier not found id=%d", pay.Data.Id))
-		}
 		if err != nil {
-			return err
+			return nil, err
 		}
+	}
 
-		updates := map[string]any{}
-		if pay.Data.TeamId > 0 {
-			updates["team_id"] = pay.Data.TeamId
-		}
-		if len(updates) > 0 {
-			if err := tx.Model(&db_models.Supplier{}).Where("id = ?", base.ID).Updates(updates).Error; err != nil {
-				return err
-			}
-		}
+	if childPay := req.Msg.GetChild(); childPay != nil {
+		switch childPay.Type {
+		case selling_iface.SupplierChildUpdateType_SUPPLIER_CHILD_UPDATE_TYPE_REMOVE:
+			now := time.Now()
+			ts := strconv.FormatInt(now.UnixMilli(), 10)
 
-		switch data := pay.Data.Data.(type) {
-		case *selling_iface.Supplier_Custom:
-			if base.Type != selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM {
-				return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("supplier type mismatch, expected %s got custom", base.Type.String()))
-			}
-			if data.Custom == nil {
-				return connect.NewError(connect.CodeInvalidArgument, errors.New("custom payload is required"))
-			}
-
-			err := tx.Model(&db_models.SupplierCustom{}).
-				Where("supplier_id = ?", base.ID).
-				Updates(map[string]any{
-					"name":        data.Custom.Name,
-					"contact":     data.Custom.Contact,
-					"description": data.Custom.Description,
+			err := db.Model(db_models.SupplierMarketplaceV2{}).
+				Where("supplier_id = ? AND id = ?", pay.Id, childPay.Id).
+				Updates(map[string]interface{}{
+					"product_name": gorm.Expr("product_name || ? || ?", "_"+ts, "_deleted"),
+					"deleted_at":   now,
 				}).
 				Error
+
 			if err != nil {
-				return err
-			}
-		case *selling_iface.Supplier_Marketplace:
-			if base.Type != selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE {
-				return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("supplier type mismatch, expected %s got marketplace", base.Type.String()))
-			}
-			if data.Marketplace == nil {
-				return connect.NewError(connect.CodeInvalidArgument, errors.New("marketplace payload is required"))
+				return nil, err
 			}
 
-			err := tx.Model(&db_models.SupplierMarketplace{}).
-				Where("supplier_id = ?", base.ID).
-				Updates(map[string]any{
-					"mp_type":      int32(common.MarketplaceType(data.Marketplace.MpType)),
-					"shop_name":    data.Marketplace.ShopName,
-					"product_name": data.Marketplace.ProductName,
-					"uri":          data.Marketplace.Uri,
-					"description":  data.Marketplace.Description,
-				}).
-				Error
-			if err != nil {
-				return err
+		case selling_iface.SupplierChildUpdateType_SUPPLIER_CHILD_UPDATE_TYPE_UPSERT:
+			if childPay.GetData() == nil {
+				return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("supplier data is required"))
 			}
-		default:
-			return connect.NewError(connect.CodeInvalidArgument, errors.New("supplier data payload is required"))
+
+			if data := childPay.Data; data != nil {
+				updata := &db_models.SupplierMarketplaceV2{
+					SupplierID:  pay.Id,
+					MpType:      int32(data.MpType),
+					ShopName:    data.ShopName,
+					ProductName: data.ProductName,
+					URI:         data.Uri,
+					Description: data.Description,
+				}
+
+				err := db.Transaction(func(tx *gorm.DB) error {
+					if childPay.Id == 0 {
+						return tx.
+							Create(updata).
+							Error
+					}
+
+					return tx.
+						Model(db_models.SupplierMarketplaceV2{}).
+						Where("id = ?", childPay.Id).
+						Updates(updata).
+						Error
+				})
+
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	return connect.NewResponse(&selling_iface.SupplierUpdateResponse{}), nil

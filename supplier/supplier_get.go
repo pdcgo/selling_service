@@ -18,20 +18,18 @@ func (s *supplierServiceImpl) SupplierGet(
 	db := s.db.WithContext(ctx)
 
 	result := &selling_iface.SupplierGetResponse{
-		Data: []*selling_iface.Supplier{},
+		Data: []*selling_iface.SupplierDetail{},
 	}
 
 	type row struct {
-		*db_models.Supplier
-		Custom      *db_models.SupplierCustom      `gorm:"foreignKey:SupplierID;references:ID"`
-		Marketplace *db_models.SupplierMarketplace `gorm:"foreignKey:SupplierID;references:ID"`
+		*db_models.SupplierV2
+		Childs []*db_models.SupplierMarketplaceV2 `gorm:"foreignKey:SupplierID;references:ID"`
 	}
 
 	var rows []*row
 	err := db.
 		Table("suppliers").
-		Preload("Custom").
-		Preload("Marketplace").
+		Preload("Childs").
 		Where("id IN ?", pay.Ids).
 		Find(&rows).
 		Error
@@ -40,31 +38,27 @@ func (s *supplierServiceImpl) SupplierGet(
 	}
 
 	for _, row := range rows {
-		supplier := selling_iface.Supplier{
-			Id:     row.ID,
-			TeamId: row.TeamID,
+		supplier := selling_iface.SupplierDetail{
+			Id:          row.ID,
+			TeamId:      row.TeamID,
+			Code:        row.Code,
+			Name:        row.Name,
+			Contact:     row.Contact,
+			Description: row.Description,
+			Address:     row.Address,
+			Province:    row.Province,
+			City:        row.City,
 		}
 
-		switch row.Type {
-		case selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM:
-			supplier.Data = &selling_iface.Supplier_Custom{
-				Custom: &selling_iface.SupplierCustom{
-					Name:        row.Custom.Name,
-					Contact:     row.Custom.Contact,
-					Description: row.Custom.Description,
-				},
-			}
-
-		case selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE:
-			supplier.Data = &selling_iface.Supplier_Marketplace{
-				Marketplace: &selling_iface.SupplierMarketplace{
-					MpType:      common.MarketplaceType(row.Marketplace.MpType),
-					ShopName:    row.Marketplace.ShopName,
-					ProductName: row.Marketplace.ProductName,
-					Uri:         row.Marketplace.URI,
-					Description: row.Marketplace.Description,
-				},
-			}
+		for _, supplierMp := range row.Childs {
+			supplier.Childs = append(supplier.Childs, &selling_iface.SupplierMarketplace{
+				MpType:      common.MarketplaceType(supplierMp.MpType),
+				SupplierId:  supplierMp.ID,
+				ShopName:    supplierMp.ShopName,
+				ProductName: supplierMp.ProductName,
+				Uri:         supplierMp.URI,
+				Description: supplierMp.Description,
+			})
 		}
 
 		result.Data = append(result.Data, &supplier)

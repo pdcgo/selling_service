@@ -2,14 +2,13 @@ package supplier
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"strconv"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 // SupplierDelete implements [selling_ifaceconnect.SupplierServiceHandler].
@@ -18,40 +17,16 @@ func (s *supplierServiceImpl) SupplierDelete(
 	pay := req.Msg
 
 	db := s.db.WithContext(ctx)
-	err := db.Transaction(func(tx *gorm.DB) error {
-		var supplier db_models.Supplier
-		err := tx.
-			Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ?", pay.Id).
-			Where("type = ?", pay.Type).
-			First(&supplier).
-			Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return connect.NewError(connect.CodeNotFound, fmt.Errorf("supplier not found id=%d type=%s", pay.Id, pay.Type.String()))
-		}
-		if err != nil {
-			return err
-		}
 
-		switch pay.Type {
-		case selling_iface.SupplierType_SUPPLIER_TYPE_CUSTOM:
-			if err := tx.Where("supplier_id = ?", pay.Id).Delete(&db_models.SupplierCustom{}).Error; err != nil {
-				return err
-			}
-		case selling_iface.SupplierType_SUPPLIER_TYPE_MARKETPLACE:
-			if err := tx.Where("supplier_id = ?", pay.Id).Delete(&db_models.SupplierMarketplace{}).Error; err != nil {
-				return err
-			}
-		default:
-			return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unsupported supplier type: %s", pay.Type.String()))
-		}
-
-		if err := tx.Where("id = ?", pay.Id).Delete(&db_models.Supplier{}).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
+	now := time.Now()
+	ts := strconv.FormatInt(now.UnixMilli(), 10)
+	err := db.Model(db_models.SupplierV2{}).
+		Where("id = ?", pay.Id).
+		Updates(map[string]interface{}{
+			"name":       gorm.Expr("name || ? || ?", "_"+ts, "_deleted"),
+			"deleted_at": now,
+		}).
+		Error
 	if err != nil {
 		return nil, err
 	}
