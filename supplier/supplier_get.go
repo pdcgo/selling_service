@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/shared/db_models"
 )
@@ -21,15 +20,9 @@ func (s *supplierServiceImpl) SupplierGet(
 		Data: []*selling_iface.SupplierDetail{},
 	}
 
-	type row struct {
-		*db_models.SupplierV2
-		Childs []*db_models.SupplierMarketplaceV2 `gorm:"foreignKey:SupplierID;references:ID"`
-	}
-
-	var rows []*row
+	var rows []*db_models.SupplierV2
 	err := db.
-		Table("suppliers").
-		Preload("Childs").
+		Model(db_models.SupplierV2{}).
 		Where("id IN ?", pay.Ids).
 		Find(&rows).
 		Error
@@ -48,17 +41,6 @@ func (s *supplierServiceImpl) SupplierGet(
 			Address:     row.Address,
 			Province:    row.Province,
 			City:        row.City,
-		}
-
-		for _, supplierMp := range row.Childs {
-			supplier.Childs = append(supplier.Childs, &selling_iface.SupplierMarketplace{
-				MpType:      common.MarketplaceType(supplierMp.MpType),
-				SupplierId:  supplierMp.ID,
-				ShopName:    supplierMp.ShopName,
-				ProductName: supplierMp.ProductName,
-				Uri:         supplierMp.URI,
-				Description: supplierMp.Description,
-			})
 		}
 
 		result.Data = append(result.Data, &supplier)

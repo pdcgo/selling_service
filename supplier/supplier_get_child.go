@@ -2,6 +2,7 @@ package supplier
 
 import (
 	"context"
+	"errors"
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
@@ -22,11 +23,22 @@ func (s *supplierServiceImpl) SupplierGetChild(
 	}
 
 	var rows []*db_models.SupplierMarketplaceV2
-	err := db.
-		Model(&db_models.SupplierMarketplaceV2{}).
-		Where("id IN ?", pay.Ids).
-		Find(&rows).
-		Error
+	query := db.Model(&db_models.SupplierMarketplaceV2{})
+
+	switch pay.Type {
+	case selling_iface.SupplierChildType_SUPPLIER_CHILD_TYPE_DETAIL:
+		query = query.Where("supplier_id IN ?", pay.Ids)
+		break
+
+	case selling_iface.SupplierChildType_SUPPLIER_CHILD_TYPE_CHILD:
+		query = query.Where("id IN ?", pay.Ids)
+		break
+
+	default:
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("type unsupported"))
+	}
+
+	err := query.Find(&rows).Error
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +46,7 @@ func (s *supplierServiceImpl) SupplierGetChild(
 	for _, row := range rows {
 		result.Data = append(result.Data, &selling_iface.SupplierMarketplace{
 			MpType:      common.MarketplaceType(row.MpType),
+			Id:          row.ID,
 			SupplierId:  row.SupplierID,
 			ShopName:    row.ShopName,
 			ProductName: row.ProductName,
