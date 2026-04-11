@@ -12,9 +12,9 @@ CREATE TABLE v2_suppliers (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_supplier_v2_team_id ON v2_suppliers(team_id);
-CREATE INDEX idx_supplier_v2_deleted_at ON v2_suppliers(deleted_at);
-CREATE UNIQUE INDEX uidx_code_active  ON v2_suppliers(code) WHERE deleted_at IS NULL;
+CREATE INDEX idx_v2_supplier_team_id ON v2_suppliers(team_id);
+CREATE INDEX idx_v2_supplier_deleted_at ON v2_suppliers(deleted_at);
+CREATE UNIQUE INDEX uidx_v2_supplier_code  ON v2_suppliers(code) WHERE deleted_at IS NULL;
 
 CREATE TABLE v2_supplier_marketplaces (
     id BIGSERIAL PRIMARY KEY,
@@ -27,11 +27,9 @@ CREATE TABLE v2_supplier_marketplaces (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_supplier_marketplace_v2_supplier_id ON v2_supplier_marketplaces (supplier_id);
-CREATE INDEX idx_supplier_marketplace_v2_deleted_at ON v2_supplier_marketplaces (deleted_at);
+CREATE INDEX idx_supplier_v2_marketplace_supplier_id ON v2_supplier_marketplaces (supplier_id);
+CREATE INDEX idx_supplier_v2_marketplace_deleted_at ON v2_supplier_marketplaces (deleted_at);
 
 -- +goose Down
 DROP TABLE IF EXISTS v2_suppliers;
 DROP TABLE IF EXISTS v2_supplier_marketplaces;
-
-
