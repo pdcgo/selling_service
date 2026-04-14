@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/selling_service/stat_service/metrics"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,29 @@ func (s *statServiceImpl) Stat(
 		var metric *selling_iface.Metric
 
 		switch metType {
+		case selling_iface.MetricType_METRIC_TYPE_ORDER_ACTIVE:
+			metric, err = metrics.NewOrderActiveMetric(s.db, req.Msg.Filter)
+			if err != nil {
+				return nil, err
+			}
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_ORDER:
+			metric, err = metrics.NewHistoryOrderMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
+		case selling_iface.MetricType_METRIC_TYPE_PRODUCT_SOLD:
+			metric, err = metrics.NewProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_PRODUCT_SOLD:
+			metric, err = metrics.NewHistoryProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
 
 		case selling_iface.MetricType_METRIC_TYPE_ONGOING_STOCK:
 			metric, err = NewOngoingStockMetric(s.db, req.Msg.Filter)
