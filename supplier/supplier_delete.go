@@ -20,7 +20,7 @@ func (s *supplierServiceImpl) SupplierDelete(
 
 	now := time.Now()
 	ts := strconv.FormatInt(now.UnixMilli(), 10)
-	err := db.Model(db_models.SupplierV2{}).
+	err := db.Model(db_models.V2Supplier{}).
 		Where("id = ?", pay.Id).
 		Updates(map[string]interface{}{
 			"name":       gorm.Expr("name || ? || ?", "_"+ts, "_deleted"),

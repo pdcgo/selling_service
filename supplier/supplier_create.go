@@ -20,7 +20,7 @@ func (s *supplierServiceImpl) SupplierCreate(
 		},
 	}
 
-	supplier := &db_models.SupplierV2{
+	supplier := &db_models.V2Supplier{
 		TeamID:      pay.TeamId,
 		Code:        pay.Code,
 		Name:        pay.Name,

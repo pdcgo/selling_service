@@ -22,8 +22,8 @@ func (s *supplierServiceImpl) SupplierGetChild(
 		Data: []*selling_iface.SupplierMarketplace{},
 	}
 
-	var rows []*db_models.SupplierMarketplaceV2
-	query := db.Model(&db_models.SupplierMarketplaceV2{})
+	var rows []*db_models.V2SupplierMarketplace
+	query := db.Model(&db_models.V2SupplierMarketplace{})
 
 	switch pay.Type {
 	case selling_iface.SupplierChildType_SUPPLIER_CHILD_TYPE_DETAIL:

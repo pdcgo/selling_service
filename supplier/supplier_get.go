@@ -20,9 +20,9 @@ func (s *supplierServiceImpl) SupplierGet(
 		Data: []*selling_iface.SupplierDetail{},
 	}
 
-	var rows []*db_models.SupplierV2
+	var rows []*db_models.V2Supplier
 	err := db.
-		Model(db_models.SupplierV2{}).
+		Model(db_models.V2Supplier{}).
 		Where("id IN ?", pay.Ids).
 		Find(&rows).
 		Error

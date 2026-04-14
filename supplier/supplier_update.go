@@ -22,7 +22,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 	if detailPay := req.Msg.GetDetail(); detailPay != nil {
 
 		err := db.
-			Model(db_models.SupplierV2{}).
+			Model(db_models.V2Supplier{}).
 			Where("id = ?", pay.Id).
 			Updates(map[string]any{
 				"code":        detailPay.Code,
@@ -45,7 +45,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 			now := time.Now()
 			ts := strconv.FormatInt(now.UnixMilli(), 10)
 
-			err := db.Model(db_models.SupplierMarketplaceV2{}).
+			err := db.Model(db_models.V2SupplierMarketplace{}).
 				Where("supplier_id = ? AND id = ?", pay.Id, childPay.Id).
 				Updates(map[string]interface{}{
 					"product_name": gorm.Expr("product_name || ? || ?", "_"+ts, "_deleted"),
@@ -63,7 +63,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 			}
 
 			if data := childPay.Data; data != nil {
-				updata := &db_models.SupplierMarketplaceV2{
+				updata := &db_models.V2SupplierMarketplace{
 					SupplierID:  pay.Id,
 					MpType:      int32(data.MpType),
 					ShopName:    data.ShopName,
@@ -80,7 +80,7 @@ func (s *supplierServiceImpl) SupplierUpdate(
 					}
 
 					return tx.
-						Model(db_models.SupplierMarketplaceV2{}).
+						Model(db_models.V2SupplierMarketplace{}).
 						Where("id = ?", childPay.Id).
 						Updates(updata).
 						Error

@@ -30,10 +30,10 @@ func (s *supplierServiceImpl) SupplierList(
 
 	db := s.db.WithContext(ctx)
 
-	var rows []*db_models.SupplierV2
+	var rows []*db_models.V2Supplier
 	paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 		query := db.
-			Model(&db_models.SupplierV2{}).
+			Model(&db_models.V2Supplier{}).
 			Scopes(func(d *gorm.DB) *gorm.DB {
 
 				if pay.TeamId > 0 {
