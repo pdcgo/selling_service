@@ -46,6 +46,7 @@ func NewProductSoldMetric(
 			fmt.Sprintf("sum(oi.count) filter (where o.team_id = %d) as own_piece_count", filter.TeamId),
 			fmt.Sprintf("count(oi.order_id) filter (where o.team_id = %d) as own_order_count", filter.TeamId),
 			fmt.Sprintf("sum(oi.total) filter (where o.team_id = %d) as own_total_amount", filter.TeamId),
+
 			fmt.Sprintf("sum(oi.count) filter (where o.team_id != %d) as cross_piece_count", filter.TeamId),
 			fmt.Sprintf("count(oi.order_id) filter (where o.team_id != %d) as cross_order_count", filter.TeamId),
 			fmt.Sprintf("sum(oi.total) filter (where o.team_id != %d) as cross_total_amount", filter.TeamId),
@@ -203,9 +204,10 @@ func NewTopProductSoldMetric(
 		Select([]string{
 			"oi.product_id",
 			"count(oi.order_id) as order_count",
+			"sum(oi.count) as piece_count",
 		}).
 		Group("oi.product_id").
-		Order("order_count desc")
+		Order("piece_count desc")
 
 	if filter.TopN > 0 {
 		oquery = oquery.Limit(int(filter.TopN))
@@ -220,8 +222,7 @@ func NewTopProductSoldMetric(
 			"p.name",
 			"p.image::json ->> 0 as image",
 			"p.ref_id",
-			"d.product_id",
-			"d.order_count",
+			"d.*",
 		})
 
 	err = dquery.Find(&result.Items).Error
