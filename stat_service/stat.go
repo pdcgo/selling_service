@@ -36,8 +36,14 @@ func (s *statServiceImpl) Stat(
 				return nil, err
 			}
 
-		case selling_iface.MetricType_METRIC_TYPE_PRODUCT_SOLD:
-			metric, err = metrics.NewProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+		case selling_iface.MetricType_METRIC_TYPE_TOP_PRODUCT_UNSOLD:
+			metric, err = metrics.NewTopProductUnsoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
+		case selling_iface.MetricType_METRIC_TYPE_TOP_PRODUCT_SOLD:
+			metric, err = metrics.NewTopProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
