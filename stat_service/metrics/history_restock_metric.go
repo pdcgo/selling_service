@@ -123,16 +123,3 @@ func NewHistoryStockResolutionMetric(db *gorm.DB, filter *selling_iface.StatFilt
 		},
 	}, err
 }
-
-func NewHistoryOutboundMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *selling_iface.TimeRange) (*selling_iface.Metric, error) {
-	var err error
-	result := selling_iface.HistoryOutboundMetric{
-		TimeType: trange.Type,
-	}
-
-	return &selling_iface.Metric{
-		Data: &selling_iface.Metric_HistoryOutbound{
-			HistoryOutbound: &result,
-		},
-	}, err
-}

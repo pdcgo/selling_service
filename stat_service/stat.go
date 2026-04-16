@@ -20,47 +20,49 @@ func (s *statServiceImpl) Stat(
 		Metrics: []*selling_iface.Metric{},
 	}
 
+	db := s.db.WithContext(ctx)
+
 	for _, metType := range req.Msg.MetricTypes {
 		var metric *selling_iface.Metric
 
 		switch metType {
 		case selling_iface.MetricType_METRIC_TYPE_ORDER_ACTIVE:
-			metric, err = metrics.NewOrderActiveMetric(s.db, req.Msg.Filter)
+			metric, err = metrics.NewOrderActiveMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
 
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_ORDER:
-			metric, err = metrics.NewHistoryOrderMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewHistoryOrderMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 
 		case selling_iface.MetricType_METRIC_TYPE_TOP_PRODUCT_UNSOLD:
-			metric, err = metrics.NewTopProductUnsoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewTopProductUnsoldMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 
 		case selling_iface.MetricType_METRIC_TYPE_TOP_PRODUCT_SOLD:
-			metric, err = metrics.NewTopProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewTopProductSoldMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_PRODUCT_SOLD:
-			metric, err = metrics.NewHistoryProductSoldMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewHistoryProductSoldMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 
 		case selling_iface.MetricType_METRIC_TYPE_ONGOING_STOCK:
-			metric, err = NewOngoingStockMetric(s.db, req.Msg.Filter)
+			metric, err = NewOngoingStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_READY_STOCK:
-			metric, err = NewReadyStockMetric(s.db, req.Msg.Filter)
+			metric, err = NewReadyStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
@@ -69,11 +71,11 @@ func (s *statServiceImpl) Stat(
 				Data: &selling_iface.Metric_TotalStock{},
 			}
 
-			ongoMetric, err := NewOngoingStockMetric(s.db, req.Msg.Filter)
+			ongoMetric, err := NewOngoingStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
-			readyMetric, err := NewReadyStockMetric(s.db, req.Msg.Filter)
+			readyMetric, err := NewReadyStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
@@ -86,32 +88,43 @@ func (s *statServiceImpl) Stat(
 				},
 			}
 		case selling_iface.MetricType_METRIC_TYPE_PAYABLE:
-			metric, err = NewPayableMetric(s.db, req.Msg.Filter)
+			metric, err = NewPayableMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_RECEIVABLE:
-			metric, err = NewReceivableMetric(s.db, req.Msg.Filter)
+			metric, err = NewReceivableMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RESTOCK:
-			metric, err = metrics.NewHistoryRestockMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewHistoryRestockMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RETURN:
-			metric, err = metrics.NewHistoryReturnMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewHistoryReturnMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_STOCK_RESOLUTION:
-			metric, err = metrics.NewHistoryStockResolutionMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			metric, err = metrics.NewHistoryStockResolutionMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
-		case selling_iface.MetricType_METRIC_TYPE_HISTORY_OUTBOUND:
-			metric, err = metrics.NewHistoryOutboundMetric(s.db, req.Msg.Filter, req.Msg.Range)
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_STOCK_ORDER:
+			metric, err = metrics.NewHistoryStockOrderMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_SHIPMENT_PROBLEM:
+			metric, err = metrics.NewHistoryShipmentProblemMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_WAREHOUSE_PROBLEM:
+			metric, err = metrics.NewHistoryWarehouseProblemMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
 				return nil, err
 			}
