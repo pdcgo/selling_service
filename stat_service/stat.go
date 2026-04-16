@@ -95,6 +95,26 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RESTOCK:
+			metric, err = metrics.NewHistoryRestockMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RETURN:
+			metric, err = metrics.NewHistoryReturnMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_STOCK_RESOLUTION:
+			metric, err = metrics.NewHistoryStockResolutionMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_OUTBOUND:
+			metric, err = metrics.NewHistoryOutboundMetric(s.db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		result.Metrics = append(result.Metrics, metric)
