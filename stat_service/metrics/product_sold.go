@@ -17,17 +17,6 @@ func NewProductSoldMetric(
 		Type: selling_iface.MetricType_METRIC_TYPE_PRODUCT_SOLD,
 	}
 
-	// 	select
-	// 	sum(oi.count) as piece_count,
-	// 	count(oi.order_id) as order_count,
-	// 	sum(oi.total) as total_amount
-	// --	oi.*
-	// from public.order_items oi
-	// join public.orders o on o.id = oi.order_id
-	// left join public.products p on p.id = oi.product_id
-	// where
-	// 	o.status != 'cancel'
-
 	selects := []string{
 		"sum(oi.count) as piece_count",
 		"count(oi.order_id) as order_count",
