@@ -1,11 +1,12 @@
 package metrics
 
 import (
+	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"gorm.io/gorm"
 )
 
-func NewHistoryWarehouseProblemMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *selling_iface.TimeRange) (*selling_iface.Metric, error) {
+func NewHistoryWarehouseProblemMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *common.StatTimeRange) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryWarehouseProblemMetric{
 		TimeType: trange.Type,
@@ -30,13 +31,13 @@ func NewHistoryWarehouseProblemMetric(db *gorm.DB, filter *selling_iface.StatFil
 	var selects []string
 
 	switch trange.Type {
-	case selling_iface.TimeType_TIME_TYPE_DAY:
+	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		selects = append(selects, "date_trunc('day', iip.created) as t")
-	case selling_iface.TimeType_TIME_TYPE_WEEK:
+	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		selects = append(selects, "date_trunc('week', iip.created) as t")
-	case selling_iface.TimeType_TIME_TYPE_MONTH:
+	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		selects = append(selects, "date_trunc('month', iip.created) as t")
-	case selling_iface.TimeType_TIME_TYPE_YEAR:
+	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		selects = append(selects, "date_trunc('year', iip.created) as t")
 	}
 
@@ -47,6 +48,16 @@ func NewHistoryWarehouseProblemMetric(db *gorm.DB, filter *selling_iface.StatFil
 		"sum(iip.count) filter (where iip.problem_type = 'broken_w') as damaged_piece_count",
 		"sum(iip.count * iti.price) filter (where iip.problem_type = 'broken_w') as damaged_piece_amount",
 	)
+
+	if filter.ProductFilter != nil {
+		productFilter := filter.ProductFilter
+		skuQuery := db.
+			Table("skus s").
+			Where("s.product_id = ?", productFilter.ProductId).
+			Where("s.id = iti.sku_id").
+			Select("1")
+		query = query.Where("exists (?)", skuQuery)
+	}
 
 	err = query.
 		Select(selects).

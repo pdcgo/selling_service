@@ -1,11 +1,12 @@
 package metrics
 
 import (
+	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"gorm.io/gorm"
 )
 
-func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *selling_iface.TimeRange) (*selling_iface.Metric, error) {
+func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *common.StatTimeRange) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryRestockMetric{
 		TimeType: trange.Type,
@@ -14,28 +15,28 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 
 	var createdSelects, arrivedSelects []string
 	switch trange.Type {
-	case selling_iface.TimeType_TIME_TYPE_DAY:
+	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		createdSelects = append(createdSelects,
 			"date_trunc('day', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('day', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_WEEK:
+	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		createdSelects = append(createdSelects,
 			"date_trunc('week', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('week', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_MONTH:
+	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		createdSelects = append(createdSelects,
 			"date_trunc('month', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('month', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_YEAR:
+	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		createdSelects = append(createdSelects,
 			"date_trunc('year', it.created) as t",
 		)
@@ -69,6 +70,16 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 
 	if filter.TeamId != 0 {
 		query = query.Where("it.team_id = ?", filter.TeamId)
+	}
+
+	if filter.ProductFilter != nil {
+		productFilter := filter.ProductFilter
+		skuQuery := db.
+			Table("skus s").
+			Where("s.product_id = ?", productFilter.ProductId).
+			Where("s.id = iti.sku_id").
+			Select("1")
+		query = query.Where("exists (?)", skuQuery)
 	}
 
 	dquery := db.
@@ -111,7 +122,7 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 	}, err
 }
 
-func NewHistoryStockResolutionMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *selling_iface.TimeRange) (*selling_iface.Metric, error) {
+func NewHistoryStockResolutionMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *common.StatTimeRange) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryStockResolutionMetric{
 		TimeType: trange.Type,

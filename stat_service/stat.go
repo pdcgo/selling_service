@@ -62,10 +62,17 @@ func (s *statServiceImpl) Stat(
 				return nil, err
 			}
 		case selling_iface.MetricType_METRIC_TYPE_READY_STOCK:
-			metric, err = NewReadyStockMetric(db, req.Msg.Filter)
+			metric, err = metrics.NewReadyStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_READY_STOCK:
+			metric, err = metrics.NewHistoryReadyStockMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
 		case selling_iface.MetricType_METRIC_TYPE_TOTAL_STOCK:
 			metric = &selling_iface.Metric{
 				Data: &selling_iface.Metric_TotalStock{},
@@ -75,7 +82,7 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
-			readyMetric, err := NewReadyStockMetric(db, req.Msg.Filter)
+			readyMetric, err := metrics.NewReadyStockMetric(db, req.Msg.Filter)
 			if err != nil {
 				return nil, err
 			}
@@ -128,6 +135,7 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
+
 		}
 
 		result.Metrics = append(result.Metrics, metric)
@@ -201,49 +209,6 @@ func NewPayableMetric(db *gorm.DB, filter *selling_iface.StatFilter) (*selling_i
 	return &selling_iface.Metric{
 		Data: &selling_iface.Metric_Payable{
 			Payable: &result,
-		},
-	}, nil
-}
-
-func NewReadyStockMetric(db *gorm.DB, filter *selling_iface.StatFilter) (*selling_iface.Metric, error) {
-	var err error
-	result := selling_iface.ReadyStockMetric{
-		Type: selling_iface.MetricType_METRIC_TYPE_READY_STOCK,
-	}
-
-	// select
-	// 	sum(-1 * ih.count) as total_count,
-	// 	count(ih.sku_id) as total_sku_count,
-	// 	sum((-1 * ih.count) * (ih.price + coalesce(ih.ext_price, 0))) as total_amount
-	// from public.invertory_histories ih
-	// where
-	// 	ih.tx_id is null
-
-	readyQ := db.
-		Table("public.invertory_histories ih").
-		Where("ih.tx_id is null")
-
-	if filter.TeamId != 0 {
-		readyQ = readyQ.Where("ih.team_id = ?", filter.TeamId)
-	}
-
-	selects := []string{
-		"sum(-1 * ih.count) as total_count",
-		"count(ih.sku_id) as total_sku_count",
-		"sum((-1 * ih.count) * (ih.price + coalesce(ih.ext_price, 0))) as total_amount",
-	}
-
-	err = readyQ.
-		Session(&gorm.Session{}).
-		Select(selects).
-		Find(&result).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &selling_iface.Metric{
-		Data: &selling_iface.Metric_ReadyStock{
-			ReadyStock: &result,
 		},
 	}, nil
 }

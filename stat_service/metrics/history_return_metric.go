@@ -1,11 +1,12 @@
 package metrics
 
 import (
+	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"gorm.io/gorm"
 )
 
-func NewHistoryReturnMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *selling_iface.TimeRange) (*selling_iface.Metric, error) {
+func NewHistoryReturnMetric(db *gorm.DB, filter *selling_iface.StatFilter, trange *common.StatTimeRange) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryReturnMetric{
 		TimeType: trange.Type,
@@ -14,28 +15,28 @@ func NewHistoryReturnMetric(db *gorm.DB, filter *selling_iface.StatFilter, trang
 
 	var createdSelects, arrivedSelects []string
 	switch trange.Type {
-	case selling_iface.TimeType_TIME_TYPE_DAY:
+	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		createdSelects = append(createdSelects,
 			"date_trunc('day', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('day', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_WEEK:
+	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		createdSelects = append(createdSelects,
 			"date_trunc('week', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('week', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_MONTH:
+	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		createdSelects = append(createdSelects,
 			"date_trunc('month', it.created) as t",
 		)
 		arrivedSelects = append(arrivedSelects,
 			"date_trunc('month', it.arrived) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_YEAR:
+	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		createdSelects = append(createdSelects,
 			"date_trunc('year', it.created) as t",
 		)
@@ -60,8 +61,7 @@ func NewHistoryReturnMetric(db *gorm.DB, filter *selling_iface.StatFilter, trang
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
 		Where("it.status != 'cancel'").
-		Where("it.type = 'return'").
-		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Where("it.type = 'return'")
 
 	if filter.WarehouseId != 0 {
 		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
@@ -71,16 +71,28 @@ func NewHistoryReturnMetric(db *gorm.DB, filter *selling_iface.StatFilter, trang
 		query = query.Where("it.team_id = ?", filter.TeamId)
 	}
 
+	if filter.ProductFilter != nil {
+		productFilter := filter.ProductFilter
+		skuQuery := db.
+			Table("skus s").
+			Where("s.product_id = ?", productFilter.ProductId).
+			Where("s.id = iti.sku_id").
+			Select("1")
+		query = query.Where("exists (?)", skuQuery)
+	}
+
 	dquery := db.
 		Table("(?) c",
 			query.
 				Session(&gorm.Session{}).
+				Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 				Select(createdSelects).
 				Group("t"),
 		).
 		Joins("full join (?) a on a.t = c.t",
 			query.
 				Session(&gorm.Session{}).
+				Where("it.arrived between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 				Where("it.arrived is not null").
 				Select(arrivedSelects).
 				Group("t"),

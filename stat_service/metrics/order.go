@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
@@ -42,7 +43,7 @@ func NewOrderActiveMetric(
 func NewHistoryOrderMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
-	trange *selling_iface.TimeRange,
+	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryOrderMetric{
@@ -63,13 +64,13 @@ func NewHistoryOrderMetric(
 	}
 
 	switch trange.Type {
-	case selling_iface.TimeType_TIME_TYPE_DAY:
+	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		selects = append(selects, "DATE_TRUNC('day', o.created_at) AS t")
-	case selling_iface.TimeType_TIME_TYPE_WEEK:
+	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		selects = append(selects, "DATE_TRUNC('week', o.created_at) AS t")
-	case selling_iface.TimeType_TIME_TYPE_MONTH:
+	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		selects = append(selects, "DATE_TRUNC('month', o.created_at) AS t")
-	case selling_iface.TimeType_TIME_TYPE_YEAR:
+	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		selects = append(selects, "DATE_TRUNC('year', o.created_at) AS t")
 	}
 

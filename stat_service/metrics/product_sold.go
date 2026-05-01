@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 
+	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
 	"gorm.io/gorm"
 )
@@ -10,7 +11,7 @@ import (
 func NewProductSoldMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
-	trange *selling_iface.TimeRange,
+	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.ProductSoldMetric{
@@ -70,7 +71,7 @@ func NewProductSoldMetric(
 func NewHistoryProductSoldMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
-	trange *selling_iface.TimeRange,
+	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.HistoryProductSoldMetric{
@@ -82,19 +83,19 @@ func NewHistoryProductSoldMetric(
 	selects := []string{}
 
 	switch trange.Type {
-	case selling_iface.TimeType_TIME_TYPE_DAY:
+	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		selects = append(selects,
 			"date_trunc('day', o.created_at) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_WEEK:
+	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		selects = append(selects,
 			"date_trunc('week', o.created_at) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_MONTH:
+	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		selects = append(selects,
 			"date_trunc('month', o.created_at) as t",
 		)
-	case selling_iface.TimeType_TIME_TYPE_YEAR:
+	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		selects = append(selects,
 			"date_trunc('year', o.created_at) as t",
 		)
@@ -153,7 +154,7 @@ func NewHistoryProductSoldMetric(
 func NewTopProductSoldMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
-	trange *selling_iface.TimeRange,
+	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.TopProductSoldMetric{
@@ -229,7 +230,7 @@ func NewTopProductSoldMetric(
 func NewTopProductUnsoldMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
-	trange *selling_iface.TimeRange,
+	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
 	result := selling_iface.TopProductUnsoldMetric{
