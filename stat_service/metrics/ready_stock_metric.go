@@ -27,6 +27,10 @@ func NewReadyStockMetric(db *gorm.DB, filter *selling_iface.StatFilter) (*sellin
 		readyQ = readyQ.Where("ih.team_id = ?", filter.TeamId)
 	}
 
+	if filter.WarehouseId != 0 {
+		readyQ = readyQ.Where("ih.warehouse_id = ?", filter.WarehouseId)
+	}
+
 	if filter.ProductFilter != nil {
 		productFilter := filter.ProductFilter
 		skuQuery := db.

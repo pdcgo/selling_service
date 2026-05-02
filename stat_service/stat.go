@@ -135,6 +135,11 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_WAREHOUSE_COD_COST:
+			metric, err = metrics.NewHistoryWarehouseCodCostMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
 
 		}
 
