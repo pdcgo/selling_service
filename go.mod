@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/firestore v1.20.0
 	connectrpc.com/connect v1.19.1
 	github.com/google/wire v0.7.0
-	github.com/pdcgo/schema v1.0.124
+	github.com/pdcgo/schema v1.0.125
 	github.com/pdcgo/shared v1.0.134
 	golang.org/x/net v0.47.0
 	gorm.io/gorm v1.31.1
