@@ -17,11 +17,6 @@ func (s *statServiceImpl) ProductStatMetric(context.Context, *connect.Request[se
 	panic("unimplemented")
 }
 
-// StatStream implements [selling_ifaceconnect.SellingStatServiceHandler].
-func (s *statServiceImpl) StatStream(context.Context, *connect.Request[selling_iface.StatStreamRequest], *connect.ServerStream[selling_iface.StatStreamResponse]) error {
-	panic("unimplemented")
-}
-
 func NewSellingStatService(db *gorm.DB) *statServiceImpl {
 	return &statServiceImpl{db}
 }
