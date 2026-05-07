@@ -61,7 +61,7 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 		Table("inv_transactions it").
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
-		Where("it.status != 'cancel'").
+		// Where("it.status != 'cancel'").
 		Where("it.type = 'restock'").
 		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 

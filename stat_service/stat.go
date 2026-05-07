@@ -109,6 +109,13 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RESTOCK_CANCEL:
+			metric, err = metrics.NewHistoryRestockCancelMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_RETURN:
 			metric, err = metrics.NewHistoryReturnMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {
@@ -125,6 +132,13 @@ func (s *statServiceImpl) Stat(
 			if err != nil {
 				return nil, err
 			}
+
+		case selling_iface.MetricType_METRIC_TYPE_HISTORY_STOCK_ORDER_CANCEL:
+			metric, err = metrics.NewHistoryStockOrderCancelMetric(db, req.Msg.Filter, req.Msg.Range)
+			if err != nil {
+				return nil, err
+			}
+
 		case selling_iface.MetricType_METRIC_TYPE_HISTORY_SHIPMENT_PROBLEM:
 			metric, err = metrics.NewHistoryShipmentProblemMetric(db, req.Msg.Filter, req.Msg.Range)
 			if err != nil {

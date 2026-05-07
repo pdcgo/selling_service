@@ -6,15 +6,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewHistoryStockOrderMetric(
+func NewHistoryStockOrderCancelMetric(
 	db *gorm.DB,
 	filter *selling_iface.StatFilter,
 	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
-	result := selling_iface.HistoryStockOrderMetric{
+	result := selling_iface.HistoryStockOrderCancelMetric{
 		TimeType: trange.Type,
-		Items:    []*selling_iface.HistoryStockOrderItem{},
+		Items:    []*selling_iface.HistoryStockOrderCancelItem{},
 	}
 
 	var selects []string
@@ -22,19 +22,19 @@ func NewHistoryStockOrderMetric(
 	switch trange.Type {
 	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		selects = append(selects,
-			"date_trunc('day', it.created) as t",
+			"date_trunc('day', its.timestamp) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		selects = append(selects,
-			"date_trunc('week', it.created) as t",
+			"date_trunc('week', its.timestamp) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		selects = append(selects,
-			"date_trunc('month', it.created) as t",
+			"date_trunc('month', its.timestamp) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		selects = append(selects,
-			"date_trunc('year', it.created) as t",
+			"date_trunc('year', its.timestamp) as t",
 		)
 	}
 
@@ -56,9 +56,9 @@ func NewHistoryStockOrderMetric(
 		Table("inv_tx_items iti").
 		Joins("left join inv_transactions it on it.id = iti.inv_transaction_id").
 		Joins("left join skus s on s.id = iti.sku_id").
-		// Where("it.status != 'cancel'").
+		Joins("left join inv_timestamps its on its.tx_id = iti.inv_transaction_id and its.status = 'cancel'").
 		Where("it.type = 'order'").
-		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Where("its.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if filter.WarehouseId != 0 {
 		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
@@ -81,8 +81,8 @@ func NewHistoryStockOrderMetric(
 		Error
 
 	return &selling_iface.Metric{
-		Data: &selling_iface.Metric_HistoryStockOrder{
-			HistoryStockOrder: &result,
+		Data: &selling_iface.Metric_HistoryStockOrderCancel{
+			HistoryStockOrderCancel: &result,
 		},
 	}, err
 }
