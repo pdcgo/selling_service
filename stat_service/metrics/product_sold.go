@@ -14,9 +14,7 @@ func NewProductSoldMetric(
 	trange *common.StatTimeRange,
 ) (*selling_iface.Metric, error) {
 	var err error
-	result := selling_iface.ProductSoldMetric{
-		Type: selling_iface.MetricType_METRIC_TYPE_PRODUCT_SOLD,
-	}
+	result := selling_iface.ProductSoldMetric{}
 
 	selects := []string{
 		"sum(oi.count) as piece_count",

@@ -17,11 +17,6 @@ func (s *statServiceImpl) CrossProductList(context.Context, *connect.Request[sel
 	panic("unimplemented")
 }
 
-// ProductStatMetric implements [selling_ifaceconnect.SellingStatServiceHandler].
-func (s *statServiceImpl) ProductStatMetric(context.Context, *connect.Request[selling_iface.ProductStatMetricRequest]) (*connect.Response[selling_iface.ProductStatMetricResponse], error) {
-	panic("unimplemented")
-}
-
 func NewSellingStatService(db *gorm.DB) *statServiceImpl {
 	return &statServiceImpl{db}
 }
