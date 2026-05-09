@@ -14,18 +14,32 @@ func (s *statServiceImpl) ProductStatMetric(
 	req *connect.Request[selling_iface.ProductStatMetricRequest],
 ) (*connect.Response[selling_iface.ProductStatMetricResponse], error) {
 	var err error
+	var ids []uint64
 	result := selling_iface.ProductStatMetricResponse{}
 
 	db := s.db.WithContext(ctx)
+
+	// processing sort
+	switch req.Msg.Sort.S.(type) {
+	case *selling_iface.ProductMetricSort_CommonSort:
+		ids, err = product_metrics.NewProductCommon(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_ProductOrderMetricSort:
+		ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	}
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, metType := range req.Msg.MetricTypes {
 		var metric *selling_iface.ProductMetric
 		switch metType {
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_ORDER:
-			metric, err = product_metrics.NewProductOrderMetric(db, req.Msg.Filter, req.Msg.Range)
-			if err != nil {
-				return nil, err
-			}
+			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, ids, req.Msg.Filter)
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		result.Metrics = append(result.Metrics, metric)
