@@ -2,6 +2,7 @@ package stat_service
 
 import (
 	"context"
+	"errors"
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
@@ -14,17 +15,22 @@ func (s *statServiceImpl) ProductStatMetric(
 	req *connect.Request[selling_iface.ProductStatMetricRequest],
 ) (*connect.Response[selling_iface.ProductStatMetricResponse], error) {
 	var err error
-	var ids []uint64
-	result := selling_iface.ProductStatMetricResponse{}
+	result := selling_iface.ProductStatMetricResponse{
+		Metrics: []*selling_iface.ProductMetric{},
+		Ids:     []uint64{},
+	}
 
 	db := s.db.WithContext(ctx)
 
 	// processing sort
 	switch req.Msg.Sort.S.(type) {
 	case *selling_iface.ProductMetricSort_CommonSort:
-		ids, err = product_metrics.NewProductCommon(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+		result.Ids, err = product_metrics.NewProductCommon(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_ProductOrderMetricSort:
-		ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+		result.Ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+
+	default:
+		err = errors.New("invalid sort type")
 	}
 
 	if err != nil {
@@ -35,7 +41,7 @@ func (s *statServiceImpl) ProductStatMetric(
 		var metric *selling_iface.ProductMetric
 		switch metType {
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_ORDER:
-			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, ids, req.Msg.Filter)
+			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		}
 
 		if err != nil {

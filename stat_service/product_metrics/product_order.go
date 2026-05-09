@@ -47,19 +47,19 @@ func (m *productMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.
 		sortField = "sum(iti.count) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_ORDER_COUNT:
 		sortField = "count(iti.inv_transaction_id) as sfield"
-	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_TOTAL_AMOUNT:
+	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_PIECE_AMOUNT:
 		sortField = "sum(iti.total) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_PIECE_COUNT:
 		sortField = "sum(iti.count) filter (where it.team_id = s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_ORDER_COUNT:
 		sortField = "count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as sfield"
-	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_TOTAL_AMOUNT:
+	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_PIECE_AMOUNT:
 		sortField = "sum(iti.total) filter (where it.team_id = s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_PIECE_COUNT:
 		sortField = "sum(iti.count) filter (where it.team_id != s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_ORDER_COUNT:
 		sortField = "count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as sfield"
-	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_TOTAL_AMOUNT:
+	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_PIECE_AMOUNT:
 		sortField = "sum(iti.total) filter (where it.team_id != s.team_id) as sfield"
 	}
 
@@ -73,12 +73,16 @@ func (m *productMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.
 
 	switch psort.SortType {
 	case selling_iface.ProductMetricSortType_PRODUCT_METRIC_SORT_TYPE_ASC:
-		wrapquery = wrapquery.Order("w.sfield asc")
+		wrapquery = wrapquery.Order("w.sfield asc nulls last")
 	case selling_iface.ProductMetricSortType_PRODUCT_METRIC_SORT_TYPE_DESC:
-		wrapquery = wrapquery.Order("w.sfield desc")
+		wrapquery = wrapquery.Order("w.sfield desc nulls last")
 	}
 
+	limit, offset := getLimitOffset(pfilter.Page)
 	err = wrapquery.
+		Debug().
+		Limit(limit).
+		Offset(offset).
 		Find(&productIds).
 		Error
 
@@ -96,15 +100,15 @@ func (m *productMetric) FetchMetric(ctx context.Context, productIds []uint64, pf
 
 	selects := []string{
 		"s.product_id as product_id",
-		"count(iti.inv_transaction_id) as transaction_count",
+		"count(iti.inv_transaction_id) as order_count",
 		"sum(iti.count) as piece_count",
 		"sum(iti.total) as piece_amount",
 
-		"count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as own_transaction_count",
+		"count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as own_order_count",
 		"sum(iti.count) filter (where it.team_id = s.team_id) as own_piece_count",
 		"sum(iti.total) filter (where it.team_id = s.team_id) as own_piece_amount",
 
-		"count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as cross_transaction_count",
+		"count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as cross_order_count",
 		"sum(iti.count) filter (where it.team_id != s.team_id) as cross_piece_count",
 		"sum(iti.total) filter (where it.team_id != s.team_id) as cross_piece_amount",
 	}
@@ -132,7 +136,8 @@ func (m *productMetric) FetchMetric(ctx context.Context, productIds []uint64, pf
 		query = query.Where("s.team_id = ?", pfilter.TeamId)
 	}
 
-	err = query.Find(&resultList).Error
+	err = query.
+		Find(&resultList).Error
 
 	for _, item := range resultList {
 		result.Data[item.ProductId] = item
