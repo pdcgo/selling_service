@@ -80,7 +80,7 @@ func (m *productMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.
 
 	limit, offset := getLimitOffset(pfilter.Page)
 	err = wrapquery.
-		Debug().
+		// Debug().
 		Limit(limit).
 		Offset(offset).
 		Find(&productIds).

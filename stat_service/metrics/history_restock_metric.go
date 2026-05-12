@@ -62,8 +62,7 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
 		// Where("it.status != 'cancel'").
-		Where("it.type = 'restock'").
-		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Where("it.type = 'restock'")
 
 	if filter.WarehouseId != 0 {
 		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
@@ -87,6 +86,7 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 		Table("(?) c",
 			query.
 				Session(&gorm.Session{}).
+				Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 				Select(createdSelects).
 				Group("t"),
 		).
@@ -94,6 +94,7 @@ func NewHistoryRestockMetric(db *gorm.DB, filter *selling_iface.StatFilter, tran
 			query.
 				Session(&gorm.Session{}).
 				Where("it.arrived is not null").
+				Where("it.arrived between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 				Select(arrivedSelects).
 				Group("t"),
 		).

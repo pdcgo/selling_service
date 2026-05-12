@@ -28,6 +28,8 @@ func (s *statServiceImpl) ProductStatMetric(
 		result.Ids, err = product_metrics.NewProductCommon(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_ProductOrderMetricSort:
 		result.Ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_RestockAcceptedMetricSort:
+		result.Ids, err = product_metrics.NewRestockAcceptedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 
 	default:
 		err = errors.New("invalid sort type")
@@ -42,6 +44,8 @@ func (s *statServiceImpl) ProductStatMetric(
 		switch metType {
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_ORDER:
 			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RESTOCK_ACCEPTED:
+			metric, err = product_metrics.NewRestockAcceptedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		}
 
 		if err != nil {
