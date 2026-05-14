@@ -74,7 +74,6 @@ func (m *restockAcceptedMetric) ProcessSort(ctx context.Context, pfilter *sellin
 
 	limit, offset := getLimitOffset(pfilter.Page)
 	err = wrapquery.
-		Debug().
 		Limit(limit).
 		Offset(offset).
 		Find(&productIds).

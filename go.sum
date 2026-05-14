@@ -187,8 +187,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
-github.com/pdcgo/schema v1.0.127 h1:adfaalqAmbDwcYXykfN76NXZXevPSfp15RCphU6o/G8=
-github.com/pdcgo/schema v1.0.127/go.mod h1:PFVdZ4apphj9eQ3JPMhf8plHqRn2gB9sOyCzy/Iz50M=
+github.com/pdcgo/schema v1.0.128 h1:PdNS1fCJzKFwaJKYhMGf2M9t+3YEJQ1QzXtZ6C7IF78=
+github.com/pdcgo/schema v1.0.128/go.mod h1:PFVdZ4apphj9eQ3JPMhf8plHqRn2gB9sOyCzy/Iz50M=
 github.com/pdcgo/shared v1.0.134 h1:yZ9b76xndLtNmwfDe7LIkQaZW+hN6+AHm9+mp37O4Fo=
 github.com/pdcgo/shared v1.0.134/go.mod h1:0fmKj08SxkQIBefLiiqDWj/mw9T0YFw1pUeyqTTbt84=
 github.com/pdcgo/v2_gots_sdk v1.3.10 h1:8rQFfldS6SRJE83VStmIWh74iNjVscr1IATLHKg9lo8=

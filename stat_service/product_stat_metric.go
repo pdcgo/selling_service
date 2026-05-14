@@ -30,6 +30,12 @@ func (s *statServiceImpl) ProductStatMetric(
 		result.Ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_RestockAcceptedMetricSort:
 		result.Ids, err = product_metrics.NewRestockAcceptedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_StockReadyMetricSort:
+		result.Ids, err = product_metrics.NewStockReadyMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_StockOngoingMetricSort:
+		result.Ids, err = product_metrics.NewStockOngoingMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_ProductShipmentTimeMetricSort:
+		result.Ids, err = product_metrics.NewProductShipmentTimeMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 
 	default:
 		err = errors.New("invalid sort type")
@@ -46,6 +52,12 @@ func (s *statServiceImpl) ProductStatMetric(
 			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RESTOCK_ACCEPTED:
 			metric, err = product_metrics.NewRestockAcceptedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_STOCK_READY:
+			metric, err = product_metrics.NewStockReadyMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_STOCK_ONGOING:
+			metric, err = product_metrics.NewStockOngoingMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_SHIPMENT_TIME:
+			metric, err = product_metrics.NewProductShipmentTimeMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		}
 
 		if err != nil {
