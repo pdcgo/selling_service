@@ -50,6 +50,7 @@ func NewSellingPushHandler(db *gorm.DB) SellingPushHandler {
 								Select([]string{
 									"o.order_mp_id as shop_id",
 									"it.warehouse_id as warehouse_id",
+									// "o.created_by_id as user_id",
 									"it.created as last_order_at",
 								}).
 								Find(&shopWarehouse).
@@ -65,7 +66,11 @@ func NewSellingPushHandler(db *gorm.DB) SellingPushHandler {
 
 							err = tx.
 								Clauses(clause.OnConflict{
-									Columns:   []clause.Column{{Name: "shop_id"}, {Name: "warehouse_id"}},
+									Columns: []clause.Column{
+										{Name: "shop_id"},
+										{Name: "warehouse_id"},
+										{Name: "user_id"},
+									},
 									DoUpdates: clause.AssignmentColumns([]string{"last_order_at"}),
 								}).
 								Create(&shopWarehouse).
