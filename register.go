@@ -24,6 +24,7 @@ func NewRegister(
 	defaultInterceptor custom_connect.DefaultInterceptor,
 	client *firestore.Client,
 	cache ware_cache.Cache,
+	sellingHttpPushHandler SellingPushHttpHandler,
 ) RegisterHandler {
 
 	return func() ServiceReflectNames {
@@ -46,6 +47,8 @@ func NewRegister(
 		path, handler = selling_ifaceconnect.NewSellingStatServiceHandler(stat_service.NewSellingStatService(db), defaultInterceptor)
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.SellingStatServiceName)
+
+		mux.HandleFunc("/selling/push", sellingHttpPushHandler)
 
 		return grpcReflects
 	}

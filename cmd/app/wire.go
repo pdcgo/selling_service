@@ -23,6 +23,8 @@ func InitializeApp() (*cli.Command, error) {
 		NewFirestoreClient,
 		custom_connect.NewDefaultInterceptor,
 		NewAuthorization,
+		selling_service.NewSellingPushHandler,
+		selling_service.NewSellingPushHttpHandler,
 		selling_service.NewRegister,
 		NewServiceApiFunc,
 		NewApp,
