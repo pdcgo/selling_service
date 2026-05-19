@@ -83,9 +83,9 @@ func (s *stockReadyMetric) ProcessSort(ctx context.Context, pfilter *selling_ifa
 	}
 
 	switch psort.GetStockReadyMetricSort() {
-	case product_metric.StockReadyMetricSort_STOCK_READY_METRIC_SORT_STOCK_AMOUNT:
-		sortField = "sum(ih.count * -1) as sfield"
 	case product_metric.StockReadyMetricSort_STOCK_READY_METRIC_SORT_STOCK_COUNT:
+		sortField = "sum(ih.count * -1) as sfield"
+	case product_metric.StockReadyMetricSort_STOCK_READY_METRIC_SORT_STOCK_AMOUNT:
 		sortField = "sum(-1 * ih.count * (ih.price + coalesce(ih.ext_price, 0))) as sfield"
 	}
 
@@ -108,8 +108,11 @@ func (s *stockReadyMetric) ProcessSort(ctx context.Context, pfilter *selling_ifa
 	err = wrapquery.
 		Limit(limit).
 		Offset(offset).
+		// Debug().
 		Find(&productIds).
 		Error
+
+	// log.Println(productIds)
 
 	return productIds, err
 
