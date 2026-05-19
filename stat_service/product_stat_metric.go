@@ -30,6 +30,16 @@ func (s *statServiceImpl) ProductStatMetric(
 		result.Ids, err = product_metrics.NewProductOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_RestockAcceptedMetricSort:
 		result.Ids, err = product_metrics.NewRestockAcceptedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_RestockCreatedMetricSort:
+		result.Ids, err = product_metrics.NewRestockCreatedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_RestockCancelledMetricSort:
+		result.Ids, err = product_metrics.NewRestockCancelledMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_ReturnCreatedMetricSort:
+		result.Ids, err = product_metrics.NewReturnCreatedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_ReturnArrivedMetricSort:
+		result.Ids, err = product_metrics.NewReturnArrivedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ProductMetricSort_ReturnCancelledMetricSort:
+		result.Ids, err = product_metrics.NewReturnCancelledMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_StockReadyMetricSort:
 		result.Ids, err = product_metrics.NewStockReadyMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ProductMetricSort_StockOngoingMetricSort:
@@ -52,6 +62,16 @@ func (s *statServiceImpl) ProductStatMetric(
 			metric, err = product_metrics.NewProductOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RESTOCK_ACCEPTED:
 			metric, err = product_metrics.NewRestockAcceptedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RESTOCK:
+			metric, err = product_metrics.NewRestockCreatedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RESTOCK_CANCEL:
+			metric, err = product_metrics.NewRestockCancelledMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RETURN_ACCEPTED:
+			metric, err = product_metrics.NewReturnArrivedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RETURN:
+			metric, err = product_metrics.NewReturnCreatedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_RETURN_CANCEL:
+			metric, err = product_metrics.NewReturnCancelledMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_STOCK_READY:
 			metric, err = product_metrics.NewStockReadyMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		case selling_iface.ProductMetricType_PRODUCT_METRIC_TYPE_STOCK_ONGOING:
