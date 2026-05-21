@@ -55,12 +55,16 @@ func (m *productMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.
 		sortField = "count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_PIECE_AMOUNT:
 		sortField = "sum(iti.total) filter (where it.team_id = s.team_id) as sfield"
+	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_OWN_LAST_ORDER:
+		sortField = "max(it.created) filter (where it.team_id = s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_PIECE_COUNT:
 		sortField = "sum(iti.count) filter (where it.team_id != s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_ORDER_COUNT:
 		sortField = "count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as sfield"
 	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_PIECE_AMOUNT:
 		sortField = "sum(iti.total) filter (where it.team_id != s.team_id) as sfield"
+	case selling_iface.ProductOrderMetricSort_PRODUCT_ORDER_METRIC_SORT_CROSS_LAST_ORDER:
+		sortField = "max(it.created) filter (where it.team_id != s.team_id) as sfield"
 	}
 
 	query = query.
@@ -107,10 +111,12 @@ func (m *productMetric) FetchMetric(ctx context.Context, productIds []uint64, pf
 		"count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as own_order_count",
 		"sum(iti.count) filter (where it.team_id = s.team_id) as own_piece_count",
 		"sum(iti.total) filter (where it.team_id = s.team_id) as own_piece_amount",
+		"max(it.created) filter (where it.team_id = s.team_id) as own_last_order",
 
 		"count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as cross_order_count",
 		"sum(iti.count) filter (where it.team_id != s.team_id) as cross_piece_count",
 		"sum(iti.total) filter (where it.team_id != s.team_id) as cross_piece_amount",
+		"max(it.created) filter (where it.team_id != s.team_id) as cross_last_order",
 	}
 
 	query := m.db.
