@@ -13,14 +13,18 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+var environtment = wire.NewSet(
+	NewCache,
+	NewDatabase,
+	NewFirestoreClient,
+)
+
 func InitializeApp() (*cli.Command, error) {
 	wire.Build(
 		configs.NewProductionConfig,
 		http.NewServeMux,
 		custom_connect.NewRegisterReflect,
-		NewCache,
-		NewDatabase,
-		NewFirestoreClient,
+		environtment,
 		custom_connect.NewDefaultInterceptor,
 		NewAuthorization,
 		selling_service.NewSellingPushHandler,

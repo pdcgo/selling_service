@@ -50,7 +50,7 @@ func NewSellingPushHandler(db *gorm.DB) SellingPushHandler {
 								Select([]string{
 									"o.order_mp_id as shop_id",
 									"it.warehouse_id as warehouse_id",
-									// "o.created_by_id as user_id",
+									"o.created_by_id as user_id",
 									"it.created as last_order_at",
 								}).
 								Find(&shopWarehouse).

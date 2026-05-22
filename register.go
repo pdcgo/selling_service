@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/firestore"
+	"github.com/pdcgo/san_collection/san_caches"
 	"github.com/pdcgo/schema/services/selling_iface/v1/selling_ifaceconnect"
 	"github.com/pdcgo/selling_service/services"
 	"github.com/pdcgo/selling_service/stat_service"
@@ -25,6 +26,7 @@ func NewRegister(
 	client *firestore.Client,
 	cache ware_cache.Cache,
 	sellingHttpPushHandler SellingPushHttpHandler,
+	cacheMgr san_caches.CacheManager,
 ) RegisterHandler {
 
 	return func() ServiceReflectNames {
@@ -44,7 +46,7 @@ func NewRegister(
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.SupplierServiceName)
 
-		path, handler = selling_ifaceconnect.NewSellingStatServiceHandler(stat_service.NewSellingStatService(db), defaultInterceptor)
+		path, handler = selling_ifaceconnect.NewSellingStatServiceHandler(stat_service.NewSellingStatService(db, cacheMgr), defaultInterceptor)
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.SellingStatServiceName)
 
