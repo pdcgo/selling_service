@@ -14,6 +14,7 @@ func (s *statServiceImpl) ShopStatMetric(ctx context.Context, req *connect.Reque
 	var err error
 	result := selling_iface.ShopStatMetricResponse{
 		Metrics: []*selling_iface.ShopMetric{},
+		Ids:     []uint64{},
 	}
 
 	db := s.db.WithContext(ctx)
@@ -21,6 +22,10 @@ func (s *statServiceImpl) ShopStatMetric(ctx context.Context, req *connect.Reque
 	switch req.Msg.Sort.S.(type) {
 	case *selling_iface.ShopMetricSort_CommonSort:
 		result.Ids, err = shop_metrics.NewCommonShopMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ShopMetricSort_ShopOrderMetricSort:
+		result.Ids, err = shop_metrics.NewShopOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ShopMetricSort_ShopProductCostMetricSort:
+		result.Ids, err = shop_metrics.NewShopProductCostMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	default:
 		err = errors.New("invalid sort type")
 	}
@@ -34,6 +39,8 @@ func (s *statServiceImpl) ShopStatMetric(ctx context.Context, req *connect.Reque
 		switch metType {
 		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_ORDER:
 			metric, err = shop_metrics.NewShopOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_PRODUCT_COST:
+			metric, err = shop_metrics.NewShopProductCostMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		}
 
 		if err != nil {
