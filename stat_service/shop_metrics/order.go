@@ -25,13 +25,13 @@ func (s *shopOrderMetric) FetchMetric(ctx context.Context, ids []uint64, filter 
 
 	selects := []string{
 		"o.order_mp_id as shop_id",
-		"count(oi.order_id) as transaction_count",
+		"count(distinct oi.order_id) as transaction_count",
 		"sum(oi.count) as piece_count",
 		"sum(oi.total) as piece_amount",
-		"sum(oi.count)::numeric / nullif(count(oi.order_id), 0) as unit_per_transaction",
-		"sum(coalesce(o.order_mp_total, 0)) as mp_total_amount",
-		"sum(coalesce(o.total, 0)) as order_total_amount",
-		"(sum(coalesce(o.total, 0))::double precision / nullif(count(oi.order_id), 0)) as average_transaction_value",
+		"sum(oi.count)::numeric / nullif(count(distinct oi.order_id), 0) as unit_per_transaction",
+		"sum(distinct coalesce(o.order_mp_total, 0)) as mp_total_amount",
+		"sum(distinct coalesce(o.total, 0)) as order_total_amount",
+		"(sum(distinct coalesce(o.total, 0))::double precision / nullif(count(distinct oi.order_id), 0)) as average_transaction_value",
 		"max(o.created_at) as last_order_created",
 	}
 

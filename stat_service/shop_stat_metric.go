@@ -24,6 +24,10 @@ func (s *statServiceImpl) ShopStatMetric(ctx context.Context, req *connect.Reque
 		result.Ids, err = shop_metrics.NewCommonShopMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ShopMetricSort_ShopOrderMetricSort:
 		result.Ids, err = shop_metrics.NewShopOrderMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ShopMetricSort_ShopOrderCompletedMetricSort:
+		result.Ids, err = shop_metrics.NewShopOrderCompletedMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
+	case *selling_iface.ShopMetricSort_ShopOrderCancelledMetricSort:
+		result.Ids, err = shop_metrics.NewShopOrderCancelledMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	case *selling_iface.ShopMetricSort_ShopProductCostMetricSort:
 		result.Ids, err = shop_metrics.NewShopProductCostMetric(db).ProcessSort(ctx, req.Msg.Filter, req.Msg.Sort)
 	default:
@@ -39,6 +43,10 @@ func (s *statServiceImpl) ShopStatMetric(ctx context.Context, req *connect.Reque
 		switch metType {
 		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_ORDER:
 			metric, err = shop_metrics.NewShopOrderMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_ORDER_COMPLETED:
+			metric, err = shop_metrics.NewShopOrderCompletedMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
+		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_ORDER_CANCELLED:
+			metric, err = shop_metrics.NewShopOrderCancelledMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		case selling_iface.ShopMetricType_SHOP_METRIC_TYPE_PRODUCT_COST:
 			metric, err = shop_metrics.NewShopProductCostMetric(db).FetchMetric(ctx, result.Ids, req.Msg.Filter)
 		}
