@@ -12,6 +12,7 @@ import (
 	"github.com/pdcgo/shared/interfaces/authorization_iface"
 	"github.com/pdcgo/shared/pkg/cloud_logging"
 	"github.com/pdcgo/shared/pkg/ware_cache"
+	"github.com/redis/go-redis/v9"
 	"github.com/urfave/cli/v3"
 	"gorm.io/gorm"
 )
@@ -38,6 +39,10 @@ func NewAuthorization(
 
 func NewDatabase(cfg *configs.AppConfig) (*gorm.DB, error) {
 	return db_connect.NewProductionDatabase("selling_service", &cfg.Database)
+}
+
+func NewRedisDatabase(cfg *configs.AppConfig) *redis.Client {
+	return db_connect.NewRedisDatabase(&cfg.RedisConfig)
 }
 
 func NewApp(

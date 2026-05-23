@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/google/wire"
+	"github.com/pdcgo/san_collection/san_caches"
 	"github.com/pdcgo/selling_service"
 	"github.com/pdcgo/shared/configs"
 	"github.com/pdcgo/shared/custom_connect"
@@ -17,6 +18,8 @@ var environtment = wire.NewSet(
 	NewCache,
 	NewDatabase,
 	NewFirestoreClient,
+	NewRedisDatabase,
+	san_caches.NewRedisCacheManager,
 )
 
 func InitializeApp() (*cli.Command, error) {

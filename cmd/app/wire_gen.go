@@ -7,6 +7,8 @@
 package main
 
 import (
+	"github.com/google/wire"
+	"github.com/pdcgo/san_collection/san_caches"
 	"github.com/pdcgo/selling_service"
 	"github.com/pdcgo/shared/configs"
 	"github.com/pdcgo/shared/custom_connect"
@@ -41,9 +43,20 @@ func InitializeApp() (*cli.Command, error) {
 	}
 	sellingPushHandler := selling_service.NewSellingPushHandler(db)
 	sellingPushHttpHandler := selling_service.NewSellingPushHttpHandler(sellingPushHandler)
-	registerHandler := selling_service.NewRegister(serveMux, db, authorization, defaultInterceptor, client, cache, sellingPushHttpHandler)
+	redisClient := NewRedisDatabase(appConfig)
+	cacheManager := san_caches.NewRedisCacheManager(redisClient)
+	registerHandler := selling_service.NewRegister(serveMux, db, authorization, defaultInterceptor, client, cache, sellingPushHttpHandler, cacheManager)
 	registerReflectFunc := custom_connect.NewRegisterReflect(serveMux)
 	serviceApiFunc := NewServiceApiFunc(serveMux, registerHandler, registerReflectFunc)
 	command := NewApp(serviceApiFunc)
 	return command, nil
 }
+
+// wire.go:
+
+var environtment = wire.NewSet(
+	NewCache,
+	NewDatabase,
+	NewFirestoreClient,
+	NewRedisDatabase, san_caches.NewRedisCacheManager,
+)
