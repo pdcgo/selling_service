@@ -36,6 +36,56 @@ func NewSellingPushHandler(db *gorm.DB) SellingPushHandler {
 		return db.Transaction(func(tx *gorm.DB) error {
 			handler := common_helper.NewChainParam(
 				func(next common_helper.NextFuncParam[*selling_iface.SellingEvent]) common_helper.NextFuncParam[*selling_iface.SellingEvent] {
+					return func(event *selling_iface.SellingEvent) (*selling_iface.SellingEvent, error) { // untuk seeding product cross
+						var err error
+						switch eventData := event.Data.(type) {
+						case *selling_iface.SellingEvent_OrderCreated:
+							crossProduct := selling_models.TeamCrossProduct{}
+							err = tx.
+								Table("order_items oi").
+								Joins("left join orders o on o.id = oi.order_id").
+								Where("oi.order_id = ?", eventData.OrderCreated.OrderId).
+								Where("oi.owned = ?", false).
+								Select([]string{
+									"o.team_id",
+									"oi.product_id",
+									"o.order_mp_id as shop_id",
+									"o.created_by_id as user_id",
+								}).
+								Find(&crossProduct).
+								Error
+
+							if err != nil {
+								return nil, err
+							}
+
+							if crossProduct.ProductId == 0 || crossProduct.ShopId == 0 {
+								return event, fmt.Errorf("event order created %d have productid and shopid 0", eventData.OrderCreated.OrderId)
+							}
+
+							err = tx.
+								Clauses(clause.OnConflict{
+									Columns: []clause.Column{
+										{Name: "team_id"},
+										{Name: "product_id"},
+										{Name: "shop_id"},
+										{Name: "user_id"},
+									},
+									DoNothing: true,
+								}).
+								Create(&crossProduct).
+								Error
+
+							if err != nil {
+								return nil, err
+							}
+
+						}
+
+						return next(event)
+					}
+				},
+				func(next common_helper.NextFuncParam[*selling_iface.SellingEvent]) common_helper.NextFuncParam[*selling_iface.SellingEvent] {
 					return func(event *selling_iface.SellingEvent) (*selling_iface.SellingEvent, error) { // seeding koneksi toko ke gudang
 						var err error
 

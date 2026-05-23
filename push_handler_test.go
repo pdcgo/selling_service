@@ -29,6 +29,8 @@ func TestOnOrderCreated(t *testing.T) {
 
 				err = db.AutoMigrate(
 					&selling_models.ShopWarehouse{},
+					&selling_models.TeamCrossProduct{},
+					&db_models.OrderItem{},
 					&db_models.Order{},
 				)
 				assert.NoError(t, err)
@@ -47,6 +49,13 @@ func TestOnOrderCreated(t *testing.T) {
 						ID:            1,
 						OrderMpID:     1,
 						InvertoryTxID: &txId,
+						Items: []*db_models.OrderItem{
+							{
+								OrderID:   1,
+								ProductID: 1,
+								Owned:     false,
+							},
+						},
 					},
 				}
 				err = db.Create(&orders).Error
