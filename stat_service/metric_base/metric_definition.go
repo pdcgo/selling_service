@@ -13,5 +13,11 @@ type ProductMetricBase interface {
 
 type ProductCrossMetricBase interface {
 	ProcessSort(ctx context.Context, pfilter *selling_iface.ProductCrossStatMetricFilter, psort *selling_iface.ProductCrossMetricSort) ([]uint64, error)
+	ProcessSortQuery(
+		ctx context.Context,
+		pfilter *selling_iface.ProductCrossStatMetricFilter,
+		psort *selling_iface.ProductCrossMetricSort,
+		productIdsChan chan<- []uint64,
+	) error
 	FetchMetric(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) (*selling_iface.ProductCrossMetric, error)
 }

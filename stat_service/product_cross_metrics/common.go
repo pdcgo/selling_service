@@ -5,6 +5,7 @@ import (
 
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/schema/services/selling_iface/v1/product_cross_metric/v1"
 	"github.com/pdcgo/selling_service/stat_service/metric_base"
 	"gorm.io/gorm"
 )
@@ -21,6 +22,35 @@ func NewProductCommon(db *gorm.DB) metric_base.ProductCrossMetricBase {
 	}
 }
 
+// ProcessSortQuery implements [metric_base.ProductCrossMetricBase].
+func (p *productCommon) ProcessSortQuery(
+	ctx context.Context,
+	pfilter *selling_iface.ProductCrossStatMetricFilter,
+	psort *selling_iface.ProductCrossMetricSort,
+	productIdsChan chan<- []uint64,
+) error {
+	var err error
+
+	// query, err := p.sortQuery(ctx, pfilter, psort, false)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// var ids []uint64
+	// err = query.
+	// 	Find(&ids).
+	// 	Error
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// productIdsChan <- ids
+
+	return err
+
+}
+
 // FetchMetric implements [metric_base.ProductMetricBase].
 func (p *productCommon) FetchMetric(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) (*selling_iface.ProductCrossMetric, error) {
 	return nil, nil
@@ -31,20 +61,47 @@ func (p *productCommon) ProcessSort(ctx context.Context, pfilter *selling_iface.
 	var err error
 	var ids []uint64
 
-	var sortField string
+	query, err := p.sortQuery(ctx, pfilter, psort, true)
+	if err != nil {
+		return nil, err
+	}
 
-	limit, offset := getLimitOffset(pfilter.Page)
+	err = query.
+		Find(&ids).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ids, err
+
+}
+
+func (p *productCommon) sortQuery(
+	ctx context.Context,
+	pfilter *selling_iface.ProductCrossStatMetricFilter,
+	psort *selling_iface.ProductCrossMetricSort,
+	useLimit bool,
+) (*gorm.DB, error) {
+
+	var sortField string
 
 	query := p.db.
 		Table("products p").
-		Select("p.id").
-		Limit(limit).
-		Offset(offset)
+		Select("p.id")
+
+	if useLimit {
+		limit, offset := getLimitOffset(pfilter.Page)
+		query = query.
+			Limit(limit).
+			Offset(offset)
+	}
 
 	switch psort.GetCommonSort() {
-	case selling_iface.CommonProductCrossSort_COMMON_PRODUCT_CROSS_SORT_NAME:
+	case product_cross_metric.CommonProductCrossSort_COMMON_PRODUCT_CROSS_SORT_NAME:
 		sortField = "p.name"
-	case selling_iface.CommonProductCrossSort_COMMON_PRODUCT_CROSS_SORT_REF_ID:
+	case product_cross_metric.CommonProductCrossSort_COMMON_PRODUCT_CROSS_SORT_REF_ID:
 		sortField = "p.ref_id"
 	}
 
@@ -78,17 +135,7 @@ func (p *productCommon) ProcessSort(ctx context.Context, pfilter *selling_iface.
 		search := "%" + pfilter.ProductName + "%"
 		query = query.Where("p.name ilike ?", search)
 	}
-
-	err = query.
-		Find(&ids).
-		Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return ids, err
-
+	return query, nil
 }
 
 func getLimitOffset(page *common.PageFilter) (int, int) {

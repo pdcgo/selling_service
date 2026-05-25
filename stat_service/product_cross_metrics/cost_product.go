@@ -14,6 +14,11 @@ type costProductMetric struct {
 	db *gorm.DB
 }
 
+// ProcessSortQuery implements [metric_base.ProductCrossMetricBase].
+func (c *costProductMetric) ProcessSortQuery(ctx context.Context, pfilter *selling_iface.ProductCrossStatMetricFilter, psort *selling_iface.ProductCrossMetricSort, productIdsChan chan<- []uint64) error {
+	panic("unimplemented")
+}
+
 // FetchMetric implements [metric_base.ProductCrossMetricBase].
 func (c *costProductMetric) FetchMetric(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) (*selling_iface.ProductCrossMetric, error) {
 	var err error
