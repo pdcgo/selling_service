@@ -71,6 +71,7 @@ func (s *statServiceImpl) ProductStatMetric(
 		sortbase = product_metrics.NewProductShipmentTimeMetric(db)
 	default:
 		err = errors.New("invalid sort type")
+		return nil, err
 	}
 
 	var resultIds resultKey
