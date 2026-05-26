@@ -15,7 +15,12 @@ type costProductMetric struct {
 }
 
 // ProcessSortQuery implements [metric_base.ProductCrossMetricBase].
-func (c *costProductMetric) ProcessSortQuery(ctx context.Context, pfilter *selling_iface.ProductCrossStatMetricFilter, psort *selling_iface.ProductCrossMetricSort, productIdsChan chan<- []uint64) error {
+func (c *costProductMetric) ProcessSortQuery(
+	ctx context.Context,
+	pfilter *selling_iface.ProductCrossStatMetricFilter,
+	psort *selling_iface.ProductCrossMetricSort,
+	productIdsChan chan<- []uint64,
+) error {
 	panic("unimplemented")
 }
 

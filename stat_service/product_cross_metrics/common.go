@@ -31,21 +31,36 @@ func (p *productCommon) ProcessSortQuery(
 ) error {
 	var err error
 
-	// query, err := p.sortQuery(ctx, pfilter, psort, false)
-	// if err != nil {
-	// 	return err
-	// }
+	query, err := p.sortQuery(ctx, pfilter, psort, false)
+	if err != nil {
+		return err
+	}
 
-	// var ids []uint64
-	// err = query.
-	// 	Find(&ids).
-	// 	Error
+	rows, err := query.Rows()
+	if err != nil {
+		return err
+	}
 
-	// if err != nil {
-	// 	return err
-	// }
+	defer rows.Close()
 
-	// productIdsChan <- ids
+	var ids []uint64
+	for rows.Next() {
+		var id uint64
+		err = rows.Scan(&id)
+		if err != nil {
+			return err
+		}
+
+		ids = append(ids, id)
+		if len(ids) >= 150 {
+			productIdsChan <- ids
+			ids = []uint64{}
+		}
+	}
+
+	if len(ids) > 0 {
+		productIdsChan <- ids
+	}
 
 	return err
 
@@ -79,7 +94,7 @@ func (p *productCommon) ProcessSort(ctx context.Context, pfilter *selling_iface.
 }
 
 func (p *productCommon) sortQuery(
-	ctx context.Context,
+	_ context.Context,
 	pfilter *selling_iface.ProductCrossStatMetricFilter,
 	psort *selling_iface.ProductCrossMetricSort,
 	useLimit bool,
@@ -118,6 +133,7 @@ func (p *productCommon) sortQuery(
 			db.
 			Table("team_cross_products cp").
 			Where("cp.team_id = ?", pfilter.TeamId).
+			Where("cp.product_id = p.id").
 			Select("1")
 		query = query.Where("exists (?)", subCross)
 	}
