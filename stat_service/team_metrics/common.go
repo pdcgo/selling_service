@@ -29,13 +29,10 @@ func (c *commonMetric) ProcessSort(ctx context.Context, tfilter *selling_iface.T
 	var ids []uint64
 
 	var sortField string
-	limit, offset := getLimitOffset(tfilter.Page)
 
 	query := c.db.
 		Table("teams t").
-		Select("t.id").
-		Limit(limit).
-		Offset(offset)
+		Select("t.id")
 
 	switch tsort.GetCommonSort() {
 	case selling_iface.CommonTeamSort_COMMON_TEAM_SORT_NAME:
@@ -49,10 +46,17 @@ func (c *commonMetric) ProcessSort(ctx context.Context, tfilter *selling_iface.T
 
 	switch tsort.GetSortType() {
 	case selling_iface.TeamMetricSortType_TEAM_METRIC_SORT_TYPE_ASC:
-		query = query.Order(sortField + " asc")
+		query = query.Order(sortField + " asc nulls last")
 	case selling_iface.TeamMetricSortType_TEAM_METRIC_SORT_TYPE_DESC:
-		query = query.Order(sortField + " desc")
+		query = query.Order(sortField + " desc nulls last")
 	}
+
+	limit, offset := getLimitOffset(tfilter.Page)
+	err = query.
+		Limit(limit).
+		Offset(offset).
+		Pluck("team_id", &ids).
+		Error
 
 	return ids, err
 }
