@@ -21,3 +21,8 @@ type ProductCrossMetricBase interface {
 	) error
 	FetchMetric(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) (*selling_iface.ProductCrossMetric, error)
 }
+
+type ShopMetricBase interface {
+	ProcessSort(ctx context.Context, sfilter *selling_iface.ShopStatMetricFilter, ssort *selling_iface.ShopMetricSort) ([]uint64, error)
+	FetchMetric(ctx context.Context, shopIds []uint64, pfilter *selling_iface.ShopStatMetricFilter) (*selling_iface.ShopMetric, error)
+}

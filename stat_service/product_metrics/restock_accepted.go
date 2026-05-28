@@ -29,7 +29,7 @@ func (m *restockAcceptedMetric) ProcessSort(ctx context.Context, pfilter *sellin
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join skus s on s.id = iti.sku_id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
-		// Where("it.status != 'cancel'").
+		Where("not it.deleted").
 		Where("it.type = 'restock'").
 		Where("it.arrived between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
@@ -46,15 +46,15 @@ func (m *restockAcceptedMetric) ProcessSort(ctx context.Context, pfilter *sellin
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_LAST_ARRIVED:
 		sortField = "max(it.arrived) as sfield"
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_TOTAL_AMOUNT:
-		sortField = "sum(iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as sfield"
+		sortField = "sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as sfield"
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_PIECE_COUNT:
 		sortField = "sum(iti.count) as sfield"
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_TRANSACTION_COUNT:
-		sortField = "count(iti.inv_transaction_id) as sfield"
+		sortField = "count(distinct iti.inv_transaction_id) as sfield"
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_COST_AMOUNT:
-		sortField = "sum(iti.count * coalesce(rc.per_piece_fee, 0)) as sfield"
+		sortField = "sum(distinct iti.count * coalesce(rc.per_piece_fee, 0)) as sfield"
 	case product_metric.RestockAcceptedMetricSort_RESTOCK_ACCEPTED_METRIC_SORT_PRODUCT_AMOUNT:
-		sortField = "sum(iti.total) as sfield"
+		sortField = "sum(distinct iti.total) as sfield"
 	}
 
 	query = query.
@@ -94,11 +94,11 @@ func (m *restockAcceptedMetric) FetchMetric(ctx context.Context, productIds []ui
 
 	selects := []string{
 		"s.product_id",
-		"count(iti.inv_transaction_id) as transaction_count",
+		"count(distinct iti.inv_transaction_id) as transaction_count",
 		"sum(iti.count) as piece_count",
-		"sum(iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as total_amount",
-		"sum(iti.total) as product_amount",
-		"sum(iti.count * coalesce(rc.per_piece_fee, 0)) as cost_amount",
+		"sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as total_amount",
+		"sum(distinct iti.total) as product_amount",
+		"sum(distinct iti.count * coalesce(rc.per_piece_fee, 0)) as cost_amount",
 		"max(it.arrived) as last_arrived",
 	}
 
@@ -107,7 +107,7 @@ func (m *restockAcceptedMetric) FetchMetric(ctx context.Context, productIds []ui
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join skus s on s.id = iti.sku_id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
-		// Where("it.status != 'cancel'").
+		Where("not it.deleted").
 		Where("it.type = 'restock'").
 		Where("it.arrived between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 		Where("s.product_id in (?)", productIds).

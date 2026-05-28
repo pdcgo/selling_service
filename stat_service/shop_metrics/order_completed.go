@@ -12,38 +12,33 @@ type shopOrderCompletedMetric struct {
 	db *gorm.DB
 }
 
-// FetchMetric implements [ShopMetricBase].
-func (s *shopOrderCompletedMetric) FetchMetric(ctx context.Context, ids []uint64, filter *selling_iface.ShopStatMetricFilter) (*selling_iface.ShopMetric, error) {
-	var err error
+type OrderCompletedQueryType int
 
-	result := shop_metric.ShopOrderCompletedMetric{
-		Data: map[uint64]*shop_metric.ShopOrderCompletedItem{},
-	}
+const (
+	ORDER_COMPLETED_QUERY_NO_AGGREGATE OrderCompletedQueryType = iota
+	ORDER_COMPLETED_QUERY_ONLY_PIECE_AGGREGATE
+	ORDER_COMPLETED_QUERY_ALL_AGGREGATE
+)
+
+func createOrderCompletedQuery(db *gorm.DB, filter *selling_iface.ShopStatMetricFilter, t OrderCompletedQueryType) *gorm.DB {
 	trange := filter.Range
+	query := db.
+		Table("orders o").
+		Joins("join inv_transactions it on it.id = o.invertory_tx_id and not it.deleted").
+		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'completed'")
 
-	resultList := []*shop_metric.ShopOrderCompletedItem{}
+	if t == ORDER_COMPLETED_QUERY_ONLY_PIECE_AGGREGATE || t == ORDER_COMPLETED_QUERY_ALL_AGGREGATE {
+		pieceAgg := db.
+			Table("order_items oi").
+			Select([]string{
+				"oi.order_id",
+				"sum(oi.count) as piece_count",
+				"sum(oi.price * oi.count) as piece_amount",
+			}).
+			Group("oi.order_id")
 
-	selects := []string{
-		"o.order_mp_id as shop_id",
-		"count(distinct oi.order_id) as transaction_count",
-		"sum(oi.count) as piece_count",
-		"sum(oi.total) as piece_amount",
-		"sum(oi.count)::numeric / nullif(count(distinct oi.order_id), 0) as unit_per_transaction",
-		"sum(distinct coalesce(o.order_mp_total, 0)) as mp_total_amount",
-		"sum(distinct coalesce(o.total, 0)) as order_total_amount",
-		"(sum(distinct coalesce(o.total, 0))::double precision / nullif(count(distinct oi.order_id), 0)) as average_transaction_value",
-		"max(o.created_at) as last_order_completed",
+		query = query.Joins("join (?) pieceAgg on pieceAgg.order_id = o.id", pieceAgg)
 	}
-
-	query := s.db.
-		Table("order_items oi").
-		Joins("left join orders o on o.id = oi.order_id").
-		Joins("left join inv_transactions it on it.id = o.invertory_tx_id").
-		Joins("left join order_timestamps ot on ot.order_id = o.id").
-		Where("ot.order_status = 'completed'").
-		Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
-		Where("o.order_mp_id in (?)", ids).
-		Select(selects)
 
 	if filter.WarehouseId != 0 {
 		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
@@ -52,6 +47,34 @@ func (s *shopOrderCompletedMetric) FetchMetric(ctx context.Context, ids []uint64
 	if filter.TeamId != 0 {
 		query = query.Where("it.team_id = ?", filter.TeamId)
 	}
+
+	return query.Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+}
+
+// FetchMetric implements [ShopMetricBase].
+func (s *shopOrderCompletedMetric) FetchMetric(ctx context.Context, ids []uint64, filter *selling_iface.ShopStatMetricFilter) (*selling_iface.ShopMetric, error) {
+	var err error
+
+	result := shop_metric.ShopOrderCompletedMetric{
+		Data: map[uint64]*shop_metric.ShopOrderCompletedItem{},
+	}
+
+	resultList := []*shop_metric.ShopOrderCompletedItem{}
+	selects := []string{
+		"o.order_mp_id as shop_id",
+		"count(o.id) as transaction_count",
+		"sum(pieceAgg.piece_count) as piece_count",
+		"sum(pieceAgg.piece_amount) as piece_amount",
+		"sum(pieceAgg.piece_count)::numeric / nullif(count(o.id), 0) as unit_per_transaction",
+		"sum(coalesce(o.order_mp_total, 0)) as mp_total_amount",
+		"sum(o.total) as order_total_amount",
+		"(sum(coalesce(o.order_mp_total, 0))::double precision / nullif(count(o.id), 0)) as average_transaction_value",
+		"max(ot.timestamp) as last_order_completed",
+	}
+
+	query := createOrderCompletedQuery(s.db, filter, ORDER_COMPLETED_QUERY_ALL_AGGREGATE).
+		Where("o.order_mp_id in (?)", ids).
+		Select(selects)
 
 	err = query.
 		Group("o.order_mp_id").
@@ -74,44 +97,36 @@ func (s *shopOrderCompletedMetric) ProcessSort(ctx context.Context, filter *sell
 	var err error
 	var productIds []uint64
 	var sortField string
-
-	trange := filter.Range
-
-	query := s.db.
-		Table("order_items oi").
-		Joins("left join orders o on o.id = oi.order_id").
-		Joins("left join inv_transactions it on it.id = o.invertory_tx_id").
-		Joins("left join order_timestamps ot on ot.order_id = o.id").
-		Where("ot.order_status = 'completed'").
-		Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
-
-	if filter.WarehouseId != 0 {
-		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
-	}
-
-	if filter.TeamId != 0 {
-		query = query.Where("it.team_id = ?", filter.TeamId)
-	}
+	var queryType OrderCompletedQueryType
 
 	switch sort.GetShopOrderCompletedMetricSort() {
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_TRANSACTION_COUNT:
-		sortField = "count(oi.order_id) as sfield"
+		queryType = ORDER_COMPLETED_QUERY_NO_AGGREGATE
+		sortField = "count(o.id) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_PIECE_COUNT:
-		sortField = "sum(oi.count) as sfield"
+		queryType = ORDER_COMPLETED_QUERY_ONLY_PIECE_AGGREGATE
+		sortField = "sum(pieceAgg.piece_count) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_PIECE_AMOUNT:
-		sortField = "sum(oi.total) as sfield"
+		queryType = ORDER_COMPLETED_QUERY_ONLY_PIECE_AGGREGATE
+		sortField = "sum(pieceAgg.piece_amount) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_UNIT_PER_TRANSACTION:
-		sortField = "sum(oi.count)::numeric / nullif(count(oi.order_id), 0) as sfield"
+		queryType = ORDER_COMPLETED_QUERY_ONLY_PIECE_AGGREGATE
+		sortField = "sum(pieceAgg.piece_count)::numeric / nullif(count(o.id), 0) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_MP_TOTAL_AMOUNT:
+		queryType = ORDER_COMPLETED_QUERY_NO_AGGREGATE
 		sortField = "sum(coalesce(o.order_mp_total, 0)) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_ORDER_TOTAL_AMOUNT:
+		queryType = ORDER_COMPLETED_QUERY_NO_AGGREGATE
 		sortField = "sum(coalesce(o.total, 0)) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_AVERAGE_TRANSACTION_VALUE:
+		queryType = ORDER_COMPLETED_QUERY_NO_AGGREGATE
 		sortField = "sum(coalesce(o.total, 0))::numeric / nullif(count(oi.order_id), 0) as sfield"
 	case shop_metric.ShopOrderCompletedMetricSort_SHOP_ORDER_COMPLETED_METRIC_SORT_LAST_ORDER_COMPLETED:
+		queryType = ORDER_COMPLETED_QUERY_NO_AGGREGATE
 		sortField = "max(ot.timestamp) as sfield"
 	}
 
+	query := createOrderCompletedQuery(s.db, filter, queryType)
 	query = query.
 		Select("o.order_mp_id", sortField).
 		Group("o.order_mp_id")

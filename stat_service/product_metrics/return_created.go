@@ -29,6 +29,7 @@ func (m *returnCreatedMetric) ProcessSort(ctx context.Context, pfilter *selling_
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join skus s on s.id = iti.sku_id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
+		Where("not it.deleted").
 		Where("it.type = 'return'").
 		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
@@ -45,13 +46,13 @@ func (m *returnCreatedMetric) ProcessSort(ctx context.Context, pfilter *selling_
 	case product_metric.ReturnCreatedMetricSort_RETURN_CREATED_METRIC_SORT_LAST_RETURN:
 		sortField = "max(it.created) as sfield"
 	case product_metric.ReturnCreatedMetricSort_RETURN_CREATED_METRIC_SORT_TOTAL_AMOUNT:
-		sortField = "sum(iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as sfield"
+		sortField = "sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as sfield"
 	case product_metric.ReturnCreatedMetricSort_RETURN_CREATED_METRIC_SORT_PIECE_COUNT:
 		sortField = "sum(iti.count) as sfield"
 	case product_metric.ReturnCreatedMetricSort_RETURN_CREATED_METRIC_SORT_TRANSACTION_COUNT:
-		sortField = "count(iti.inv_transaction_id) as sfield"
+		sortField = "count(distinct iti.inv_transaction_id) as sfield"
 	case product_metric.ReturnCreatedMetricSort_RETURN_CREATED_METRIC_SORT_TRANSACTION_AMOUNT:
-		sortField = "it.total as sfield"
+		sortField = "sum(distinct it.total) as sfield"
 	}
 
 	query = query.
@@ -91,10 +92,10 @@ func (m *returnCreatedMetric) FetchMetric(ctx context.Context, productIds []uint
 
 	selects := []string{
 		"s.product_id",
-		"count(iti.inv_transaction_id) as transaction_count",
-		"count(it.total) as transaction_amount",
+		"count(distinct iti.inv_transaction_id) as transaction_count",
+		"count(distinct it.total) as transaction_amount",
 		"sum(iti.count) as piece_count",
-		"sum(iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as total_amount",
+		"sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as total_amount",
 		"max(it.created) as last_return",
 	}
 
@@ -103,6 +104,7 @@ func (m *returnCreatedMetric) FetchMetric(ctx context.Context, productIds []uint
 		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
 		Joins("left join skus s on s.id = iti.sku_id").
 		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
+		Where("not it.deleted").
 		Where("it.type = 'return'").
 		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 		Where("s.product_id in (?)", productIds).
