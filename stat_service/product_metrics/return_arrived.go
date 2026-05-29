@@ -13,27 +13,24 @@ type returnArrivedMetric struct {
 	db *gorm.DB
 }
 
-func NewReturnArrivedMetric(db *gorm.DB) metric_base.ProductMetricBase {
-	return &returnArrivedMetric{db: db}
-}
-
-func (m *returnArrivedMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.ProductStatMetricFilter, psort *selling_iface.ProductMetricSort) ([]uint64, error) {
-	var err error
-	var productIds []uint64
-	var sortField string
-
+func createReturnArrivedQuery(db *gorm.DB, pfilter *selling_iface.ProductStatMetricFilter) *gorm.DB {
 	trange := pfilter.Range
+	perTxProduct := db.
+		Table("inv_tx_items iti").
+		Joins("join skus s on s.id = iti.sku_id").
+		Select([]string{
+			"s.product_id",
+			"iti.inv_transaction_id",
+			"sum(iti.total) as piece_amount",
+			"sum(iti.count) as piece_count",
+		}).
+		Group("s.product_id, iti.inv_transaction_id")
 
-	query := m.db.
-		Table("inv_transactions it").
-		Joins("left join inv_timestamps its on its.tx_id = it.id").
-		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
-		Joins("left join skus s on s.id = iti.sku_id").
-		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
-		Where("not it.deleted").
-		Where("it.type = 'return'").
-		Where("its.status = 'completed'").
-		Where("its.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+	query := db.
+		Table("(?) p", perTxProduct).
+		Joins("join inv_transactions it on it.id = p.inv_transaction_id and it.type = 'return' and not it.deleted").
+		Joins("left join restock_costs rc on rc.inv_transaction_id = it.id").
+		Where("it.arrived between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if pfilter.WarehouseId != 0 {
 		query = query.Where("it.warehouse_id = ?", pfilter.WarehouseId)
@@ -43,23 +40,37 @@ func (m *returnArrivedMetric) ProcessSort(ctx context.Context, pfilter *selling_
 		query = query.Where("it.team_id = ?", pfilter.TeamId)
 	}
 
+	return query
+}
+
+func NewReturnArrivedMetric(db *gorm.DB) metric_base.ProductMetricBase {
+	return &returnArrivedMetric{db: db}
+}
+
+func (m *returnArrivedMetric) ProcessSort(ctx context.Context, pfilter *selling_iface.ProductStatMetricFilter, psort *selling_iface.ProductMetricSort) ([]uint64, error) {
+	var err error
+	var productIds []uint64
+	var sortField string
+
+	query := createReturnArrivedQuery(m.db, pfilter)
+
 	// sorting
 	switch psort.GetReturnArrivedMetricSort() {
 	case product_metric.ReturnArrivedMetricSort_RETURN_ARRIVED_METRIC_SORT_LAST_ARRIVED:
-		sortField = "max(its.timestamp) as sfield"
+		sortField = "max(it.arrived) as sfield"
 	case product_metric.ReturnArrivedMetricSort_RETURN_ARRIVED_METRIC_SORT_TOTAL_AMOUNT:
-		sortField = "sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as sfield"
+		sortField = "sum(p.piece_amount + (p.piece_count * coalesce(rc.per_piece_fee, 0))) as sfield"
 	case product_metric.ReturnArrivedMetricSort_RETURN_ARRIVED_METRIC_SORT_PIECE_COUNT:
-		sortField = "sum(iti.count) as sfield"
+		sortField = "sum(p.piece_count) as sfield"
 	case product_metric.ReturnArrivedMetricSort_RETURN_ARRIVED_METRIC_SORT_TRANSACTION_COUNT:
-		sortField = "count(distinct iti.inv_transaction_id) as sfield"
+		sortField = "count(p.inv_transaction_id) as sfield"
 	case product_metric.ReturnArrivedMetricSort_RETURN_ARRIVED_METRIC_SORT_TRANSACTION_AMOUNT:
-		sortField = "sum(distinct it.total) as sfield"
+		sortField = "sum(it.total) as sfield"
 	}
 
 	query = query.
-		Select("s.product_id", sortField).
-		Group("s.product_id")
+		Select("p.product_id", sortField).
+		Group("p.product_id")
 
 	wrapquery := m.db.
 		Table("(?) w", query).
@@ -88,42 +99,23 @@ func (m *returnArrivedMetric) FetchMetric(ctx context.Context, productIds []uint
 	result := product_metric.ReturnArrivedMetric{
 		Data: map[uint64]*product_metric.ReturnArrivedItem{},
 	}
-	trange := pfilter.Range
 
 	resultList := []*product_metric.ReturnArrivedItem{}
-
 	selects := []string{
-		"s.product_id",
-		"count(distinct iti.inv_transaction_id) as transaction_count",
-		"count(distinct it.total) as transaction_amount",
-		"sum(iti.count) as piece_count",
-		"sum(distinct iti.total + (iti.count * coalesce(rc.per_piece_fee, 0))) as total_amount",
-		"max(its.timestamp) as last_arrived",
+		"p.product_id",
+		"count(p.inv_transaction_id) as transaction_count",
+		"count(it.total) as transaction_amount",
+		"sum(p.piece_count) as piece_count",
+		"sum(p.piece_amount + (p.piece_count * coalesce(rc.per_piece_fee, 0))) as total_amount",
+		"max(it.arrived) as last_arrived",
 	}
 
-	query := m.db.
-		Table("inv_transactions it").
-		Joins("left join inv_timestamps its on its.tx_id = it.id").
-		Joins("left join inv_tx_items iti on iti.inv_transaction_id = it.id").
-		Joins("left join skus s on s.id = iti.sku_id").
-		Joins("left join restock_costs rc on rc.inv_transaction_id  = it.id").
-		Where("not it.deleted").
-		Where("it.type = 'return'").
-		Where("its.status = 'completed'").
-		Where("its.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
-		Where("s.product_id in (?)", productIds).
+	query := createReturnArrivedQuery(m.db, pfilter).
+		Where("p.product_id in (?)", productIds).
 		Select(selects)
 
-	if pfilter.WarehouseId != 0 {
-		query = query.Where("it.warehouse_id = ?", pfilter.WarehouseId)
-	}
-
-	if pfilter.TeamId != 0 {
-		query = query.Where("it.team_id = ?", pfilter.TeamId)
-	}
-
 	err = query.
-		Group("s.product_id").
+		Group("p.product_id").
 		Find(&resultList).
 		Error
 
