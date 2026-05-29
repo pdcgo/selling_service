@@ -10,7 +10,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/pdcgo/event_source v1.0.8
 	github.com/pdcgo/san_collection v1.0.0
-	github.com/pdcgo/schema v1.0.133
+	github.com/pdcgo/schema v1.0.134
 	github.com/pdcgo/shared v1.0.134
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/stretchr/testify v1.11.1

@@ -142,6 +142,7 @@ func productCrossStatMetricExportHeader(metricType []selling_iface.ProductCrossM
 			metric = &product_cross_metric.CostProductItem{}
 		case selling_iface.ProductCrossMetricType_PRODUCT_CROSS_METRIC_TYPE_COMMON:
 			metric = &product_cross_metric.CommonProductCrossItem{}
+
 		default:
 			return nil, errors.New("invalid metric type")
 		}

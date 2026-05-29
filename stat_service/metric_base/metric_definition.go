@@ -20,6 +20,21 @@ type ProductCrossMetricBase interface {
 		productIdsChan chan<- []uint64,
 	) error
 	FetchMetric(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) (*selling_iface.ProductCrossMetric, error)
+	// WriteToRow(ctx context.Context, productIds []uint64, pfilter *selling_iface.ProductCrossStatMetricFilter) error
+}
+
+type CsvRow struct {
+	mapper map[uint64][]string
+}
+
+func NewCsvRow() *CsvRow {
+	return &CsvRow{
+		mapper: make(map[uint64][]string),
+	}
+}
+
+func (c *CsvRow) WriteToRow(id uint64, metricItem ProductCrossMetricBase) {
+
 }
 
 type ShopMetricBase interface {
