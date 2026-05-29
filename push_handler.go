@@ -60,7 +60,7 @@ func NewSellingPushHandler(db *gorm.DB) SellingPushHandler {
 							}
 
 							if crossProduct.ProductId == 0 || crossProduct.ShopId == 0 {
-								return event, fmt.Errorf("event order created %d have productid and shopid 0", eventData.OrderCreated.OrderId)
+								return next(event)
 							}
 
 							err = tx.
@@ -153,3 +153,16 @@ type SellingPushHttpHandler http.HandlerFunc
 func NewSellingPushHttpHandler(handler SellingPushHandler) SellingPushHttpHandler {
 	return SellingPushHttpHandler(event_source.NewMuxPushhandler(event_source.PushHandler(handler)))
 }
+
+// func NewSeedSupplierOrderLog(db *gorm.DB) common_helper.NextHandlerParam[*selling_iface.SellingEvent] {
+// 	return func(next common_helper.NextFuncParam[*selling_iface.SellingEvent]) common_helper.NextFuncParam[*selling_iface.SellingEvent] {
+// 		return func(event *selling_iface.SellingEvent) (*selling_iface.SellingEvent, error) {
+// 			var err error
+// 			switch eventData := event.Data.(type) {
+// 			case *selling_iface.SellingEvent_OrderCreated:
+
+// 			}
+
+// 		}
+// 	}
+// }
