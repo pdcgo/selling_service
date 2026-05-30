@@ -221,7 +221,7 @@ func NewBatchHandler(
 					TeamID:     log.TeamProductID,
 					Count:      int64(log.Count),
 					Amount:     log.Amount,
-					EventAt:    time.Now(),
+					EventAt:    ord.CreatedAt,
 					OrderID:    data.OrderCreated.OrderId,
 				}
 
