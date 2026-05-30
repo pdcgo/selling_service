@@ -20,6 +20,7 @@ var environtment = wire.NewSet(
 	NewFirestoreClient,
 	NewRedisDatabase,
 	san_caches.NewRedisCacheManager,
+	NewBatchConfig,
 )
 
 func InitializeApp() (*cli.Command, error) {
@@ -33,6 +34,9 @@ func InitializeApp() (*cli.Command, error) {
 		selling_service.NewSellingPushHandler,
 		selling_service.NewSellingPushHttpHandler,
 		selling_service.NewRegister,
+
+		NewBatchHandler,
+		NewBatchFunc,
 		NewServiceApiFunc,
 		NewApp,
 	)

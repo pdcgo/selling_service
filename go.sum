@@ -504,10 +504,10 @@ github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjY
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/pdcgo/event_source v1.0.8 h1:CPsHKngfkCQ2/mHntNcNHWFBX7EX/T/PTbGthuGTEtI=
 github.com/pdcgo/event_source v1.0.8/go.mod h1:vjTUsDfVm25Ju7LaX+15vmquc/vDZU/mx7MJ3dKfHnk=
-github.com/pdcgo/san_collection v1.0.0 h1:CGrlrjQqayztBkFX0e5ZuaWbywtGcR5qiHNLBq+UbTY=
-github.com/pdcgo/san_collection v1.0.0/go.mod h1:R/H0MVgj3FHwPaO98BIE4wB8L9PMiGOEGRsp4N2LWtM=
-github.com/pdcgo/schema v1.0.134 h1:Wa3ZLs9J9r8xgGeOfY+w7alTNImw5Kex9n1pebxivHE=
-github.com/pdcgo/schema v1.0.134/go.mod h1:PFVdZ4apphj9eQ3JPMhf8plHqRn2gB9sOyCzy/Iz50M=
+github.com/pdcgo/san_collection v1.0.2 h1:o9B8mxF6BM55lTT4e2Y93S6GAw5LLjvqpJ612p1Re8A=
+github.com/pdcgo/san_collection v1.0.2/go.mod h1:NtGhoMsmHoZt2fBTdPz1n+7o/BM48IRE/GyJJaRARMw=
+github.com/pdcgo/schema v1.0.135 h1:5xlo4WnnRG3j8kCDcsgVR8blzjfwXHX5/77eoO5dOMg=
+github.com/pdcgo/schema v1.0.135/go.mod h1:PFVdZ4apphj9eQ3JPMhf8plHqRn2gB9sOyCzy/Iz50M=
 github.com/pdcgo/shared v1.0.134 h1:yZ9b76xndLtNmwfDe7LIkQaZW+hN6+AHm9+mp37O4Fo=
 github.com/pdcgo/shared v1.0.134/go.mod h1:0fmKj08SxkQIBefLiiqDWj/mw9T0YFw1pUeyqTTbt84=
 github.com/pdcgo/v2_gots_sdk v1.3.10 h1:8rQFfldS6SRJE83VStmIWh74iNjVscr1IATLHKg9lo8=

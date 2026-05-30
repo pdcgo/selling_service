@@ -6,15 +6,17 @@ require (
 	buf.build/go/protovalidate v1.0.1
 	cloud.google.com/go/cloudtasks v1.13.7
 	cloud.google.com/go/firestore v1.21.0
+	cloud.google.com/go/pubsub/v2 v2.6.0
 	connectrpc.com/connect v1.19.2
 	github.com/google/wire v0.7.0
 	github.com/pdcgo/event_source v1.0.8
-	github.com/pdcgo/san_collection v1.0.0
-	github.com/pdcgo/schema v1.0.134
+	github.com/pdcgo/san_collection v1.0.2
+	github.com/pdcgo/schema v1.0.135
 	github.com/pdcgo/shared v1.0.134
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.7.0
+	go.opentelemetry.io/otel v1.43.0
 	golang.org/x/net v0.53.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
@@ -30,7 +32,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.7.0 // indirect
 	cloud.google.com/go/longrunning v0.8.0 // indirect
-	cloud.google.com/go/pubsub/v2 v2.6.0 // indirect
 	cloud.google.com/go/secretmanager v1.16.0 // indirect
 	cloud.google.com/go/trace v1.11.7 // indirect
 	connectrpc.com/grpcreflect v1.3.0 // indirect
@@ -108,7 +109,6 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
