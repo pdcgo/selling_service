@@ -64,6 +64,9 @@ func NewBatchFunc(
 		iddleDuration := time.Minute
 		timeout := time.AfterFunc(iddleDuration, cancel)
 
+		subscribe.ReceiveSettings.MaxOutstandingMessages = 10
+		subscribe.ReceiveSettings.NumGoroutines = 3
+
 		err = subscribe.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 			timeout.Reset(iddleDuration)
 

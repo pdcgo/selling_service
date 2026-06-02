@@ -48,6 +48,7 @@ func NewRedisDatabase(cfg *configs.AppConfig) *redis.Client {
 func NewApp(
 	serviceApiFunc ServiceApiFunc,
 	batchFunc BatchFunc,
+	statementFunc StatementFunc,
 ) *cli.Command {
 
 	return &cli.Command{
@@ -57,6 +58,10 @@ func NewApp(
 			{
 				Name:   "batch",
 				Action: cli.ActionFunc(batchFunc),
+			},
+			{
+				Name:   "statement",
+				Action: cli.ActionFunc(statementFunc),
 			},
 		},
 	}

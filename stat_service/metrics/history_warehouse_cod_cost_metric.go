@@ -38,7 +38,7 @@ func NewHistoryWarehouseCodCostMetric(db *gorm.DB, filter *selling_iface.StatFil
 	}
 
 	query := db.
-		Debug().
+		// Debug().
 		Table("restock_costs rc").
 		Joins("join inv_transactions it on it.id = rc.inv_transaction_id").
 		Where("rc.cod_fee > 0").
