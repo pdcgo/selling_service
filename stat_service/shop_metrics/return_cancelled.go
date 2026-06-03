@@ -26,7 +26,7 @@ func createReturnCancelledQuery(db *gorm.DB, filter *selling_iface.ShopStatMetri
 	query := db.
 		Table("orders o").
 		Joins("join inv_transactions it on it.id = o.invertory_return_tx_id and not it.deleted").
-		Joins("join inv_timestamps its on its.tx_id = o.invertory_return_tx_id and not its.status = 'cancel'")
+		Joins("join inv_timestamps its on its.tx_id = o.invertory_return_tx_id and its.status = 'cancel'")
 
 	if t == RETURN_CANCELLED_QUERY_ONLY_PIECE_AGGREGATE || t == RETURN_CANCELLED_QUERY_ALL_AGGREGATE {
 		pieceAgg := db.
