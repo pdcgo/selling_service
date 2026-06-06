@@ -9,12 +9,18 @@ import (
 )
 
 type UserMetricBase interface {
+	Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error)
 	ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error)
 	FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error)
 }
 
 type userCommon struct {
 	db *gorm.DB
+}
+
+// FetchMetric implements [UserMetricBase].
+func (u *userCommon) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
+	panic("unimplemented")
 }
 
 // FetchMetric implements [UserMetricBase].
