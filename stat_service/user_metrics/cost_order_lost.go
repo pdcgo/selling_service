@@ -8,12 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type costUserOrderCompleted struct {
+type costUserOrderLost struct {
 	db *gorm.DB
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *costUserOrderCompleted) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
+func (u *costUserOrderLost) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
 
 	trange := ufilter.Range
 
@@ -21,7 +21,7 @@ func (u *costUserOrderCompleted) Query(ctx context.Context, ufilter *selling_ifa
 		db.
 		Table("order_items oi").
 		Joins("join orders o on o.id = oi.order_id").
-		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'completed'").
+		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'return_problem'").
 		Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
 		Select([]string{
 			"oi.order_id",
@@ -39,7 +39,7 @@ func (u *costUserOrderCompleted) Query(ctx context.Context, ufilter *selling_ifa
 		db.
 		Table("orders o").
 		Joins("join (?) pieces on pieces.order_id = o.id", pieces).
-		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'completed'").
+		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'return_problem'").
 		Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if ufilter.TeamId != 0 {
@@ -50,11 +50,11 @@ func (u *costUserOrderCompleted) Query(ctx context.Context, ufilter *selling_ifa
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *costUserOrderCompleted) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
+func (u *costUserOrderLost) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
 	var err error
 
-	result := &user_metric.UserCostOrderCompletedMetric{
-		Data: map[uint64]*user_metric.UserCostOrderCompletedItem{},
+	result := &user_metric.UserCostOrderLostMetric{
+		Data: map[uint64]*user_metric.UserCostOrderLostItem{},
 	}
 
 	query, err := u.Query(ctx, ufilter)
@@ -62,7 +62,7 @@ func (u *costUserOrderCompleted) FetchMetric(ctx context.Context, userIds []uint
 		return nil, err
 	}
 
-	resultList := []*user_metric.UserCostOrderCompletedItem{}
+	resultList := []*user_metric.UserCostOrderLostItem{}
 	err = query.
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
@@ -86,14 +86,14 @@ func (u *costUserOrderCompleted) FetchMetric(ctx context.Context, userIds []uint
 	}
 
 	return &selling_iface.UserMetric{
-		Data: &selling_iface.UserMetric_UserCostOrderCompletedMetric{
-			UserCostOrderCompletedMetric: result,
+		Data: &selling_iface.UserMetric_UserCostOrderLostMetric{
+			UserCostOrderLostMetric: result,
 		},
 	}, err
 }
 
 // ProcessSort implements [UserMetricBase].
-func (u *costUserOrderCompleted) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
+func (u *costUserOrderLost) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
 	var err error
 	var ids []uint64
 	var sortfield string
@@ -103,16 +103,16 @@ func (u *costUserOrderCompleted) ProcessSort(ctx context.Context, ufilter *selli
 		return nil, err
 	}
 
-	switch usort.GetUserCostOrderCompletedMetricSort() {
-	case user_metric.UserCostOrderCompletedMetricSort_USER_COST_ORDER_COMPLETED_METRIC_SORT_PRODUCT_AMOUNT:
+	switch usort.GetUserCostOrderLostMetricSort() {
+	case user_metric.UserCostOrderLostMetricSort_USER_COST_ORDER_LOST_METRIC_SORT_PRODUCT_AMOUNT:
 		sortfield = "sum(pieces.amount) as sfield"
-	case user_metric.UserCostOrderCompletedMetricSort_USER_COST_ORDER_COMPLETED_METRIC_SORT_OWN_PRODUCT_AMOUNT:
+	case user_metric.UserCostOrderLostMetricSort_USER_COST_ORDER_LOST_METRIC_SORT_OWN_PRODUCT_AMOUNT:
 		sortfield = "sum(pieces.own_amount) as sfield"
-	case user_metric.UserCostOrderCompletedMetricSort_USER_COST_ORDER_COMPLETED_METRIC_SORT_CROSS_PRODUCT_AMOUNT:
+	case user_metric.UserCostOrderLostMetricSort_USER_COST_ORDER_LOST_METRIC_SORT_CROSS_PRODUCT_AMOUNT:
 		sortfield = "sum(pieces.cross_amount) as sfield"
-	case user_metric.UserCostOrderCompletedMetricSort_USER_COST_ORDER_COMPLETED_METRIC_SORT_WAREHOUSE_AMOUNT:
+	case user_metric.UserCostOrderLostMetricSort_USER_COST_ORDER_LOST_METRIC_SORT_WAREHOUSE_AMOUNT:
 		sortfield = "sum(o.warehouse_fee) as sfield"
-	case user_metric.UserCostOrderCompletedMetricSort_USER_COST_ORDER_COMPLETED_METRIC_SORT_TOTAL_AMOUNT:
+	case user_metric.UserCostOrderLostMetricSort_USER_COST_ORDER_LOST_METRIC_SORT_TOTAL_AMOUNT:
 		sortfield = "sum(o.total) as sfield"
 	}
 
@@ -144,6 +144,6 @@ func (u *costUserOrderCompleted) ProcessSort(ctx context.Context, ufilter *selli
 
 }
 
-func NewUserCostOrderCompletedMetric(db *gorm.DB) UserMetricBase {
-	return &costUserOrderCompleted{db: db}
+func NewUserCostOrderLostMetric(db *gorm.DB) UserMetricBase {
+	return &costUserOrderLost{db: db}
 }

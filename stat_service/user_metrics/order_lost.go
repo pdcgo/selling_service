@@ -8,20 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type userWithdrawal struct {
+type userOrderLost struct {
 	db *gorm.DB
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *userWithdrawal) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
+func (u *userOrderLost) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
 
 	trange := ufilter.Range
-
 	query := u.
 		db.
-		Table("order_adjustments oa").
-		Joins("join orders o on oa.order_id = o.id").
-		Where("oa.fund_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Table("orders o").
+		Joins("join order_timestamps ot on ot.order_id = o.id and ot.order_status = 'return_problem'").
+		Where("ot.timestamp between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if ufilter.TeamId != 0 {
 		query = query.Where("o.team_id = ?", ufilter.TeamId)
@@ -31,11 +30,11 @@ func (u *userWithdrawal) Query(ctx context.Context, ufilter *selling_iface.UserS
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *userWithdrawal) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
+func (u *userOrderLost) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
 	var err error
 
-	result := &user_metric.UserWithdrawalMetric{
-		Data: map[uint64]*user_metric.UserWithdrawalItem{},
+	result := &user_metric.UserOrderLostMetric{
+		Data: map[uint64]*user_metric.UserOrderLostItem{},
 	}
 
 	query, err := u.Query(ctx, ufilter)
@@ -43,14 +42,14 @@ func (u *userWithdrawal) FetchMetric(ctx context.Context, userIds []uint64, ufil
 		return nil, err
 	}
 
-	resultList := []*user_metric.UserWithdrawalItem{}
+	resultList := []*user_metric.UserOrderLostItem{}
 	err = query.
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
 			"o.created_by_id as user_id",
-			"sum(oa.amount) filter (where oa.amount > 0) as withdrawal_fund_amount",
-			"sum(oa.amount) filter (where oa.amount < 0) as withdrawal_adjustment_amount",
-			"sum(oa.amount) as withdrawal_total_amount",
+			"sum(o.total) as total_amount",
+			"sum(o.order_mp_total) as mp_total_amount",
+			"count(o.id) as transaction_count",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).
@@ -65,14 +64,14 @@ func (u *userWithdrawal) FetchMetric(ctx context.Context, userIds []uint64, ufil
 	}
 
 	return &selling_iface.UserMetric{
-		Data: &selling_iface.UserMetric_UserWithdrawalMetric{
-			UserWithdrawalMetric: result,
+		Data: &selling_iface.UserMetric_UserOrderLostMetric{
+			UserOrderLostMetric: result,
 		},
 	}, err
 }
 
 // ProcessSort implements [UserMetricBase].
-func (u *userWithdrawal) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
+func (u *userOrderLost) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
 	var err error
 	var ids []uint64
 	var sortfield string
@@ -82,13 +81,13 @@ func (u *userWithdrawal) ProcessSort(ctx context.Context, ufilter *selling_iface
 		return nil, err
 	}
 
-	switch usort.GetUserWithdrawalMetricSort() {
-	case user_metric.UserWithdrawalMetricSort_USER_WITHDRAWAL_METRIC_SORT_WITHDRAWAL_FUND_AMOUNT:
-		sortfield = "sum(oa.amount) filter (where oa.amount > 0) as sfield"
-	case user_metric.UserWithdrawalMetricSort_USER_WITHDRAWAL_METRIC_SORT_WITHDRAWAL_ADJUSTMENT_AMOUNT:
-		sortfield = "sum(oa.amount) filter (where oa.amount < 0) as sfield"
-	case user_metric.UserWithdrawalMetricSort_USER_WITHDRAWAL_METRIC_SORT_WITHDRAWAL_TOTAL_AMOUNT:
-		sortfield = "sum(oa.amount) as sfield"
+	switch usort.GetUserOrderLostMetricSort() {
+	case user_metric.UserOrderLostMetricSort_USER_ORDER_LOST_METRIC_SORT_TOTAL_AMOUNT:
+		sortfield = "sum(o.total) as sfield"
+	case user_metric.UserOrderLostMetricSort_USER_ORDER_LOST_METRIC_SORT_MP_TOTAL_AMOUNT:
+		sortfield = "sum(o.order_mp_total) as sfield"
+	case user_metric.UserOrderLostMetricSort_USER_ORDER_LOST_METRIC_SORT_TRANSACTION_COUNT:
+		sortfield = "count(o.id) as sfield"
 	}
 
 	query = query.
@@ -119,6 +118,8 @@ func (u *userWithdrawal) ProcessSort(ctx context.Context, ufilter *selling_iface
 
 }
 
-func NewUserWithdrawalMetric(db *gorm.DB) UserMetricBase {
-	return &userWithdrawal{db: db}
+func NewUserOrderLostMetric(db *gorm.DB) UserMetricBase {
+	return &userOrderLost{
+		db: db,
+	}
 }

@@ -42,49 +42,76 @@ func (s *statServiceImpl) UserStatMetric(
 	case *selling_iface.UserMetricSort_UserOrderMetricSort:
 		sortFieldName = sortField.UserOrderMetricSort.String()
 		sortbase = user_metrics.NewUserOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserOrderCompletedMetricSort:
-		sortFieldName = sortField.UserOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserOrderCompletedMetric(db)
+	case *selling_iface.UserMetricSort_UserOrderWithdrawalMetricSort:
+		sortFieldName = sortField.UserOrderWithdrawalMetricSort.String()
+		sortbase = user_metrics.NewUserOrderWithdrawalMetric(db)
 	case *selling_iface.UserMetricSort_UserOrderCancelledMetricSort:
 		sortFieldName = sortField.UserOrderCancelledMetricSort.String()
 		sortbase = user_metrics.NewUserOrderCancelledMetric(db)
+	case *selling_iface.UserMetricSort_UserOrderLostMetricSort:
+		sortFieldName = sortField.UserOrderLostMetricSort.String()
+		sortbase = user_metrics.NewUserOrderLostMetric(db)
 
 	// stock order
 	case *selling_iface.UserMetricSort_UserStockOrderMetricSort:
 		sortFieldName = sortField.UserStockOrderMetricSort.String()
 		sortbase = user_metrics.NewUserStockOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderCompletedMetricSort:
-		sortFieldName = sortField.UserStockOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderCompletedMetric(db)
+	case *selling_iface.UserMetricSort_UserStockOrderWithdrawalMetricSort:
+		sortFieldName = sortField.UserStockOrderWithdrawalMetricSort.String()
+		sortbase = user_metrics.NewUserStockOrderWithdrawalMetric(db)
 	case *selling_iface.UserMetricSort_UserStockOrderCancelledMetricSort:
 		sortFieldName = sortField.UserStockOrderCancelledMetricSort.String()
 		sortbase = user_metrics.NewUserStockOrderCancelledMetric(db)
+	case *selling_iface.UserMetricSort_UserStockOrderLostMetricSort:
+		sortFieldName = sortField.UserStockOrderLostMetricSort.String()
+		sortbase = user_metrics.NewUserStockOrderLostMetric(db)
 
 	// avg order
 	case *selling_iface.UserMetricSort_UserAvgOrderMetricSort:
 		sortFieldName = sortField.UserAvgOrderMetricSort.String()
 		sortbase = user_metrics.NewUserAvgOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserAvgOrderCompletedMetricSort:
-		sortFieldName = sortField.UserAvgOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserAvgOrderCompletedMetric(db)
+	case *selling_iface.UserMetricSort_UserAvgOrderWithdrawalMetricSort:
+		sortFieldName = sortField.UserAvgOrderWithdrawalMetricSort.String()
+		sortbase = user_metrics.NewUserAvgOrderWithdrawalMetric(db)
 	case *selling_iface.UserMetricSort_UserAvgOrderCancelledMetricSort:
 		sortFieldName = sortField.UserAvgOrderCancelledMetricSort.String()
 		sortbase = user_metrics.NewUserAvgOrderCancelledMetric(db)
+	case *selling_iface.UserMetricSort_UserAvgOrderLostMetricSort:
+		sortFieldName = sortField.UserAvgOrderLostMetricSort.String()
+		sortbase = user_metrics.NewUserAvgOrderLostMetric(db)
 
 	// cost order
 	case *selling_iface.UserMetricSort_UserCostOrderMetricSort:
 		sortFieldName = sortField.UserCostOrderMetricSort.String()
 		sortbase = user_metrics.NewUserCostOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderCompletedMetricSort:
-		sortFieldName = sortField.UserCostOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderCompletedMetric(db)
+	case *selling_iface.UserMetricSort_UserCostOrderWithdrawalMetricSort:
+		sortFieldName = sortField.UserCostOrderWithdrawalMetricSort.String()
+		sortbase = user_metrics.NewUserCostOrderWithdrawalMetric(db)
 	case *selling_iface.UserMetricSort_UserCostOrderCancelledMetricSort:
 		sortFieldName = sortField.UserCostOrderCancelledMetricSort.String()
 		sortbase = user_metrics.NewUserCostOrderCancelledMetric(db)
+	case *selling_iface.UserMetricSort_UserCostOrderLostMetricSort:
+		sortFieldName = sortField.UserCostOrderLostMetricSort.String()
+		sortbase = user_metrics.NewUserCostOrderLostMetric(db)
+
+	// profit order
+	case *selling_iface.UserMetricSort_UserProfitOrderCreatedMetricSort:
+		sortFieldName = sortField.UserProfitOrderCreatedMetricSort.String()
+		sortbase = user_metrics.NewUserProfitOrderCreatedMetric(db)
+	case *selling_iface.UserMetricSort_UserProfitOrderWithdrawalMetricSort:
+		sortFieldName = sortField.UserProfitOrderWithdrawalMetricSort.String()
+		sortbase = user_metrics.NewUserProfitOrderWithdrawalMetric(db)
+	case *selling_iface.UserMetricSort_UserLostProfitOrderMetricSort:
+		sortFieldName = sortField.UserLostProfitOrderMetricSort.String()
+		sortbase = user_metrics.NewUserLostProfitOrderMetric(db)
 
 	case *selling_iface.UserMetricSort_UserWithdrawalMetricSort:
 		sortFieldName = sortField.UserWithdrawalMetricSort.String()
 		sortbase = user_metrics.NewUserWithdrawalMetric(db)
+
+	case *selling_iface.UserMetricSort_UserAdsExpenseMetricSort:
+		sortFieldName = sortField.UserAdsExpenseMetricSort.String()
+		sortbase = user_metrics.NewUserAdsExpenseMetric(db)
 
 	default:
 		err = errors.New("invalid sort type")
@@ -125,37 +152,56 @@ func (s *statServiceImpl) UserStatMetric(
 		// order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER:
 			metricbase = user_metrics.NewUserOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_COMPLETED:
-			metricbase = user_metrics.NewUserOrderCompletedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_WITHDRAWAL:
+			metricbase = user_metrics.NewUserOrderWithdrawalMetric(db)
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_CANCELLED:
 			metricbase = user_metrics.NewUserOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_LOST:
+			metricbase = user_metrics.NewUserOrderLostMetric(db)
 
 		// stock order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER:
 			metricbase = user_metrics.NewUserStockOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_COMPLETED:
-			metricbase = user_metrics.NewUserStockOrderCompletedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_WITHDRAWAL:
+			metricbase = user_metrics.NewUserStockOrderWithdrawalMetric(db)
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_CANCELLED:
 			metricbase = user_metrics.NewUserStockOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_LOST:
+			metricbase = user_metrics.NewUserStockOrderLostMetric(db)
 
 		// avg order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER:
 			metricbase = user_metrics.NewUserAvgOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_COMPLETED:
-			metricbase = user_metrics.NewUserAvgOrderCompletedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_WITHDRAWAL:
+			metricbase = user_metrics.NewUserAvgOrderWithdrawalMetric(db)
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_CANCELLED:
 			metricbase = user_metrics.NewUserAvgOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_LOST:
+			metricbase = user_metrics.NewUserAvgOrderLostMetric(db)
 
 		// cost order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER:
 			metricbase = user_metrics.NewUserCostOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_COMPLETED:
-			metricbase = user_metrics.NewUserCostOrderCompletedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_WITHDRAWAL:
+			metricbase = user_metrics.NewUserCostOrderWithdrawalMetric(db)
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_CANCELLED:
 			metricbase = user_metrics.NewUserCostOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_LOST:
+			metricbase = user_metrics.NewUserCostOrderLostMetric(db)
+
+		// profit order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_CREATED:
+			metricbase = user_metrics.NewUserProfitOrderCreatedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_WITHDRAWAL:
+			metricbase = user_metrics.NewUserProfitOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_LOST_PROFIT_ORDER:
+			metricbase = user_metrics.NewUserLostProfitOrderMetric(db)
 
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_WITHDRAWAL:
 			metricbase = user_metrics.NewUserWithdrawalMetric(db)
+
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ADS_EXPENSE:
+			metricbase = user_metrics.NewUserAdsExpenseMetric(db)
 
 		default:
 			err = errors.New("invalid metric type")
