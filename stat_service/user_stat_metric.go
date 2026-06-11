@@ -19,6 +19,7 @@ func (s *statServiceImpl) UserStatMetric(
 	ctx context.Context,
 	req *connect.Request[selling_iface.UserStatMetricRequest],
 ) (*connect.Response[selling_iface.UserStatMetricResponse], error) {
+
 	var err error
 	result := &selling_iface.UserStatMetricResponse{
 		Ids:     []uint64{},
@@ -26,12 +27,77 @@ func (s *statServiceImpl) UserStatMetric(
 	}
 
 	var defaultExpiration time.Duration = time.Minute
-
 	db := s.db.WithContext(ctx)
 
-	var sortbase user_metrics.UserMetricBase
+	var metricMap = user_metrics.MetricMap{}
+	for _, metType := range req.Msg.MetricTypes {
+		switch metType {
+		// order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER:
+			metricMap[metType] = user_metrics.NewUserOrderMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_CANCELLED:
+			metricMap[metType] = user_metrics.NewUserOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_LOST:
+			metricMap[metType] = user_metrics.NewUserOrderLostMetric(db)
 
+		// stock order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER:
+			metricMap[metType] = user_metrics.NewUserStockOrderMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserStockOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_CANCELLED:
+			metricMap[metType] = user_metrics.NewUserStockOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_LOST:
+			metricMap[metType] = user_metrics.NewUserStockOrderLostMetric(db)
+
+		// avg order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER:
+			metricMap[metType] = user_metrics.NewUserAvgOrderMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserAvgOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_CANCELLED:
+			metricMap[metType] = user_metrics.NewUserAvgOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_LOST:
+			metricMap[metType] = user_metrics.NewUserAvgOrderLostMetric(db)
+
+		// cost order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER:
+			metricMap[metType] = user_metrics.NewUserCostOrderMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserCostOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_CANCELLED:
+			metricMap[metType] = user_metrics.NewUserCostOrderCancelledMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_LOST:
+			metricMap[metType] = user_metrics.NewUserCostOrderLostMetric(db)
+
+		// profit order
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_CREATED:
+			metricMap[metType] = user_metrics.NewUserProfitOrderCreatedMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserProfitOrderWithdrawalMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_LOST_PROFIT_ORDER:
+			metricMap[metType] = user_metrics.NewUserLostProfitOrderMetric(db)
+
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_WITHDRAWAL:
+			metricMap[metType] = user_metrics.NewUserWithdrawalMetric(db)
+
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_ADS_EXPENSE:
+			metricMap[metType] = user_metrics.NewUserAdsExpenseMetric(db)
+
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_OR_LOSS:
+			metricMap[metType] = user_metrics.NewUserProfitOrLossMetric(db, metricMap)
+
+		default:
+			err = errors.New("invalid metric type")
+			return nil, err
+		}
+	}
+
+	var sortbase user_metrics.UserMetricBase
 	var sortFieldName string
+
 	// processing sort
 	switch sortField := req.Msg.Sort.S.(type) {
 	case *selling_iface.UserMetricSort_CommonSort:
@@ -113,6 +179,10 @@ func (s *statServiceImpl) UserStatMetric(
 		sortFieldName = sortField.UserAdsExpenseMetricSort.String()
 		sortbase = user_metrics.NewUserAdsExpenseMetric(db)
 
+	case *selling_iface.UserMetricSort_UserProfitOrLossMetricSort:
+		sortFieldName = sortField.UserProfitOrLossMetricSort.String()
+		sortbase = user_metrics.NewUserProfitOrLossMetric(db, metricMap)
+
 	default:
 		err = errors.New("invalid sort type")
 		return nil, err
@@ -145,66 +215,12 @@ func (s *statServiceImpl) UserStatMetric(
 	result.Ids = resultIds
 
 	for _, metType := range req.Msg.MetricTypes {
+
 		var metric *selling_iface.UserMetric = &selling_iface.UserMetric{}
-		var metricbase user_metrics.UserMetricBase
+		var metricbase = metricMap[metType]
 
-		switch metType {
-		// order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER:
-			metricbase = user_metrics.NewUserOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_WITHDRAWAL:
-			metricbase = user_metrics.NewUserOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_CANCELLED:
-			metricbase = user_metrics.NewUserOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ORDER_LOST:
-			metricbase = user_metrics.NewUserOrderLostMetric(db)
-
-		// stock order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER:
-			metricbase = user_metrics.NewUserStockOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_WITHDRAWAL:
-			metricbase = user_metrics.NewUserStockOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_CANCELLED:
-			metricbase = user_metrics.NewUserStockOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_LOST:
-			metricbase = user_metrics.NewUserStockOrderLostMetric(db)
-
-		// avg order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER:
-			metricbase = user_metrics.NewUserAvgOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_WITHDRAWAL:
-			metricbase = user_metrics.NewUserAvgOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_CANCELLED:
-			metricbase = user_metrics.NewUserAvgOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER_LOST:
-			metricbase = user_metrics.NewUserAvgOrderLostMetric(db)
-
-		// cost order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER:
-			metricbase = user_metrics.NewUserCostOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_WITHDRAWAL:
-			metricbase = user_metrics.NewUserCostOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_CANCELLED:
-			metricbase = user_metrics.NewUserCostOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_LOST:
-			metricbase = user_metrics.NewUserCostOrderLostMetric(db)
-
-		// profit order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_CREATED:
-			metricbase = user_metrics.NewUserProfitOrderCreatedMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_WITHDRAWAL:
-			metricbase = user_metrics.NewUserProfitOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_LOST_PROFIT_ORDER:
-			metricbase = user_metrics.NewUserLostProfitOrderMetric(db)
-
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_WITHDRAWAL:
-			metricbase = user_metrics.NewUserWithdrawalMetric(db)
-
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_ADS_EXPENSE:
-			metricbase = user_metrics.NewUserAdsExpenseMetric(db)
-
-		default:
-			err = errors.New("invalid metric type")
+		if metricbase == nil {
+			err = errors.New("invalid sort type")
 			return nil, err
 		}
 

@@ -2,6 +2,7 @@ package user_metrics
 
 import (
 	"context"
+	"errors"
 
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
@@ -12,6 +13,25 @@ type UserMetricBase interface {
 	Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error)
 	ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error)
 	FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error)
+}
+
+type MetricMap map[selling_iface.UserMetricType]UserMetricBase
+
+func (mm MetricMap) GetMetric(mtype selling_iface.UserMetricType) (metric UserMetricBase, err error) {
+	metric = mm[mtype]
+	if mm[mtype] == nil {
+		err = errors.New("metric:required " + mtype.String())
+	}
+	return
+}
+
+func (mm MetricMap) GetQuery(mtype selling_iface.UserMetricType, ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (query *gorm.DB, err error) {
+	metric, err := mm.GetMetric(mtype)
+	if mm[mtype] == nil {
+		return
+	}
+	query, err = metric.Query(ctx, ufilter)
+	return
 }
 
 type userCommon struct {

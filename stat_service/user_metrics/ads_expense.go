@@ -80,7 +80,7 @@ func (u *adsExpense) ProcessSort(ctx context.Context, ufilter *selling_iface.Use
 	}
 
 	switch usort.GetUserAdsExpenseMetricSort() {
-	case user_metric.UserAdsExpenseMetricSort_USER_ADS_EXPNESE_METRIC_SORT_ADS_AMOUNT:
+	case user_metric.UserAdsExpenseMetricSort_USER_ADS_EXPENSE_METRIC_SORT_ADS_AMOUNT:
 		sortfield = "sum(aeh.amount) as sfield"
 	}
 

@@ -19,6 +19,7 @@ func (u *userProfitOrderCreated) Query(ctx context.Context, ufilter *selling_ifa
 	query := u.
 		db.
 		Table("orders o").
+		Where("o.status != 'cancel'").
 		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if ufilter.TeamId != 0 {
