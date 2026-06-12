@@ -8,18 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type userOrder struct {
+var ongoingStatus = []string{"created", "process", "shipped", "courrier_shipped"}
+
+type userOrderOngoing struct {
 	db *gorm.DB
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *userOrder) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
+func (u *userOrderOngoing) Query(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter) (*gorm.DB, error) {
 
-	trange := ufilter.Range
 	query := u.
 		db.
 		Table("orders o").
-		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Where("o.status in (?)", ongoingStatus)
 
 	if ufilter.TeamId != 0 {
 		query = query.Where("o.team_id = ?", ufilter.TeamId)
@@ -29,11 +30,11 @@ func (u *userOrder) Query(ctx context.Context, ufilter *selling_iface.UserStatMe
 }
 
 // FetchMetric implements [UserMetricBase].
-func (u *userOrder) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
+func (u *userOrderOngoing) FetchMetric(ctx context.Context, userIds []uint64, ufilter *selling_iface.UserStatMetricFilter) (*selling_iface.UserMetric, error) {
 	var err error
 
-	result := &user_metric.UserOrderMetric{
-		Data: map[uint64]*user_metric.UserOrderItem{},
+	result := &user_metric.UserOrderOngoingMetric{
+		Data: map[uint64]*user_metric.UserOrderOngoingItem{},
 	}
 
 	query, err := u.Query(ctx, ufilter)
@@ -41,7 +42,7 @@ func (u *userOrder) FetchMetric(ctx context.Context, userIds []uint64, ufilter *
 		return nil, err
 	}
 
-	resultList := []*user_metric.UserOrderItem{}
+	resultList := []*user_metric.UserOrderOngoingItem{}
 	err = query.
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
@@ -49,7 +50,7 @@ func (u *userOrder) FetchMetric(ctx context.Context, userIds []uint64, ufilter *
 			"sum(o.total) as total_amount",
 			"sum(o.order_mp_total) as mp_total_amount",
 			"count(o.id) as transaction_count",
-			"max(o.created_at) as last_order_created",
+			"max(o.created_at) as last_order_ongoing",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).
@@ -64,14 +65,14 @@ func (u *userOrder) FetchMetric(ctx context.Context, userIds []uint64, ufilter *
 	}
 
 	return &selling_iface.UserMetric{
-		Data: &selling_iface.UserMetric_UserOrderMetric{
-			UserOrderMetric: result,
+		Data: &selling_iface.UserMetric_UserOrderOngoingMetric{
+			UserOrderOngoingMetric: result,
 		},
 	}, err
 }
 
 // ProcessSort implements [UserMetricBase].
-func (u *userOrder) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
+func (u *userOrderOngoing) ProcessSort(ctx context.Context, ufilter *selling_iface.UserStatMetricFilter, usort *selling_iface.UserMetricSort) ([]uint64, error) {
 	var err error
 	var ids []uint64
 	var sortfield string
@@ -81,14 +82,14 @@ func (u *userOrder) ProcessSort(ctx context.Context, ufilter *selling_iface.User
 		return nil, err
 	}
 
-	switch usort.GetUserOrderMetricSort() {
-	case user_metric.UserOrderMetricSort_USER_ORDER_METRIC_SORT_TOTAL_AMOUNT:
+	switch usort.GetUserOrderOngoingMetricSort() {
+	case user_metric.UserOrderOngoingMetricSort_USER_ORDER_ONGOING_METRIC_SORT_TOTAL_AMOUNT:
 		sortfield = "sum(o.total) as sfield"
-	case user_metric.UserOrderMetricSort_USER_ORDER_METRIC_SORT_MP_TOTAL_AMOUNT:
+	case user_metric.UserOrderOngoingMetricSort_USER_ORDER_ONGOING_METRIC_SORT_MP_TOTAL_AMOUNT:
 		sortfield = "sum(o.order_mp_total) as sfield"
-	case user_metric.UserOrderMetricSort_USER_ORDER_METRIC_SORT_TRANSACTION_COUNT:
+	case user_metric.UserOrderOngoingMetricSort_USER_ORDER_ONGOING_METRIC_SORT_TRANSACTION_COUNT:
 		sortfield = "count(o.id) as sfield"
-	case user_metric.UserOrderMetricSort_USER_ORDER_METRIC_SORT_LAST_ORDER_CREATED:
+	case user_metric.UserOrderOngoingMetricSort_USER_ORDER_ONGOING_METRIC_SORT_LAST_ORDER_ONGOING:
 		sortfield = "max(o.created_at) as sfield"
 	}
 
@@ -120,8 +121,8 @@ func (u *userOrder) ProcessSort(ctx context.Context, ufilter *selling_iface.User
 
 }
 
-func NewUserOrderMetric(db *gorm.DB) UserMetricBase {
-	return &userOrder{
+func NewUserOrderOngoingMetric(db *gorm.DB) UserMetricBase {
+	return &userOrderOngoing{
 		db: db,
 	}
 }

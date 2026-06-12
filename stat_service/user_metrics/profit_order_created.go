@@ -48,7 +48,7 @@ func (u *userProfitOrderCreated) FetchMetric(ctx context.Context, userIds []uint
 		Select([]string{
 			"o.created_by_id as user_id",
 			"sum(o.order_mp_total - o.total) as profit_created_amount",
-			"((sum(o.order_mp_total - o.total) / sum(o.total)) * 100) as profit_created_percent",
+			"((sum(o.order_mp_total - o.total) / sum(o.order_mp_total)) * 100) as profit_created_percent",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).

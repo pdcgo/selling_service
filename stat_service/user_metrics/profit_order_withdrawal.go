@@ -57,10 +57,10 @@ func (u *userProfitOrderWithdrawal) FetchMetric(ctx context.Context, userIds []u
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
 			"o.created_by_id as user_id",
-			"sum(w.amount - o.total) as profit_withdrawal_amount",
-			"((sum(w.amount - o.total) / sum(o.total)) * 100) as profit_withdrawal_percent",
-			"sum(w.amount - o.order_mp_total) as profit_withdrawal_adjustment_amount",
-			"((sum(w.amount - o.order_mp_total) / sum(o.order_mp_total)) * 100) as profit_withdrawal_adjustment_percent",
+			"sum(w.amount) - sum(o.total) as profit_withdrawal_amount",
+			"(((sum(w.amount) - sum(o.total)) / sum(o.total)) * 100) as profit_withdrawal_percent",
+			"sum(w.amount) - sum(o.order_mp_total) as profit_withdrawal_adjustment_amount",
+			"(((sum(w.amount) - sum(o.order_mp_total)) / sum(o.order_mp_total)) * 100) as profit_withdrawal_adjustment_percent",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).

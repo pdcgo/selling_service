@@ -50,6 +50,7 @@ func (u *userOrderLost) FetchMetric(ctx context.Context, userIds []uint64, ufilt
 			"sum(o.total) as total_amount",
 			"sum(o.order_mp_total) as mp_total_amount",
 			"count(o.id) as transaction_count",
+			"max(ot.timestamp) as last_order_lost",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).
@@ -88,6 +89,8 @@ func (u *userOrderLost) ProcessSort(ctx context.Context, ufilter *selling_iface.
 		sortfield = "sum(o.order_mp_total) as sfield"
 	case user_metric.UserOrderLostMetricSort_USER_ORDER_LOST_METRIC_SORT_TRANSACTION_COUNT:
 		sortfield = "count(o.id) as sfield"
+	case user_metric.UserOrderLostMetricSort_USER_ORDER_LOST_METRIC_SORT_LAST_ORDER_LOST:
+		sortfield = "max(ot.timestamp) as sfield"
 	}
 
 	query = query.
