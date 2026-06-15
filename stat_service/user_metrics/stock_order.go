@@ -20,7 +20,8 @@ func (u *stockUserOrder) Query(ctx context.Context, ufilter *selling_iface.UserS
 		db.
 		Table("order_items oi").
 		Joins("join orders o on o.id = oi.order_id").
-		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
+		Where("o.status != 'cancel'")
 
 	if ufilter.TeamId != 0 {
 		query = query.Where("o.team_id = ?", ufilter.TeamId)

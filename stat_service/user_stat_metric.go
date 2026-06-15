@@ -53,20 +53,6 @@ func (s *statServiceImpl) UserStatMetric(
 		// stock order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER:
 			metricMap[metType] = user_metrics.NewUserStockOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_WITHDRAWAL:
-			metricMap[metType] = user_metrics.NewUserStockOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_CANCELLED:
-			metricMap[metType] = user_metrics.NewUserStockOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_LOST:
-			metricMap[metType] = user_metrics.NewUserStockOrderLostMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_COMPLETED:
-			metricMap[metType] = user_metrics.NewUserStockOrderCompletedMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_RETURN:
-			metricMap[metType] = user_metrics.NewUserStockOrderReturnMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_RETURN_COMPLETED:
-			metricMap[metType] = user_metrics.NewUserStockOrderReturnCompletedMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_STOCK_ORDER_ONGOING:
-			metricMap[metType] = user_metrics.NewUserStockOrderOngoingMetric(db)
 
 		// avg order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_AVG_ORDER:
@@ -87,22 +73,12 @@ func (s *statServiceImpl) UserStatMetric(
 			metricMap[metType] = user_metrics.NewUserAvgOrderOngoingMetric(db)
 
 		// cost order
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER:
-			metricMap[metType] = user_metrics.NewUserCostOrderMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_WITHDRAWAL:
-			metricMap[metType] = user_metrics.NewUserCostOrderWithdrawalMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_CANCELLED:
-			metricMap[metType] = user_metrics.NewUserCostOrderCancelledMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_LOST:
-			metricMap[metType] = user_metrics.NewUserCostOrderLostMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_COMPLETED:
-			metricMap[metType] = user_metrics.NewUserCostOrderCompletedMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_RETURN:
-			metricMap[metType] = user_metrics.NewUserCostOrderReturnMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_RETURN_COMPLETED:
-			metricMap[metType] = user_metrics.NewUserCostOrderReturnCompletedMetric(db)
-		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_ORDER_ONGOING:
-			metricMap[metType] = user_metrics.NewUserCostOrderOngoingMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_WAREHOUSE:
+			metricMap[metType] = user_metrics.NewUserCostWarehouseMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_PRODUCT_OWN:
+			metricMap[metType] = user_metrics.NewUserCostProductOwnMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_COST_PRODUCT_CROSS:
+			metricMap[metType] = user_metrics.NewUserCostProductCrossMetric(db)
 
 		// profit order
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_PROFIT_ORDER_CREATED:
@@ -116,6 +92,12 @@ func (s *statServiceImpl) UserStatMetric(
 			metricMap[metType] = user_metrics.NewUserWithdrawalMetric(db)
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_WITHDRAWAL_BREAKDOWN:
 			metricMap[metType] = user_metrics.NewUserWithdrawalBreakdownMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_REVENUE_ORDER:
+			metricMap[metType] = user_metrics.NewUserRevenueOrderMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_REVENUE_WAREHOUSE_ADJUSTMENT:
+			metricMap[metType] = user_metrics.NewUserRevenueWarehouseAdjustmentMetric(db)
+		case selling_iface.UserMetricType_USER_METRIC_TYPE_REVENUE_PRODUCT_ADJUSTMENT:
+			metricMap[metType] = user_metrics.NewUserRevenueProductAdjustmentMetric(db)
 
 		case selling_iface.UserMetricType_USER_METRIC_TYPE_ADS_EXPENSE:
 			metricMap[metType] = user_metrics.NewUserAdsExpenseMetric(db)
@@ -168,27 +150,6 @@ func (s *statServiceImpl) UserStatMetric(
 	case *selling_iface.UserMetricSort_UserStockOrderMetricSort:
 		sortFieldName = sortField.UserStockOrderMetricSort.String()
 		sortbase = user_metrics.NewUserStockOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderWithdrawalMetricSort:
-		sortFieldName = sortField.UserStockOrderWithdrawalMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderWithdrawalMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderCancelledMetricSort:
-		sortFieldName = sortField.UserStockOrderCancelledMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderCancelledMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderLostMetricSort:
-		sortFieldName = sortField.UserStockOrderLostMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderLostMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderCompletedMetricSort:
-		sortFieldName = sortField.UserStockOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderCompletedMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderReturnMetricSort:
-		sortFieldName = sortField.UserStockOrderReturnMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderReturnMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderReturnCompletedMetricSort:
-		sortFieldName = sortField.UserStockOrderReturnCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderReturnCompletedMetric(db)
-	case *selling_iface.UserMetricSort_UserStockOrderOngoingMetricSort:
-		sortFieldName = sortField.UserStockOrderOngoingMetricSort.String()
-		sortbase = user_metrics.NewUserStockOrderOngoingMetric(db)
 
 	// avg order
 	case *selling_iface.UserMetricSort_UserAvgOrderMetricSort:
@@ -217,30 +178,15 @@ func (s *statServiceImpl) UserStatMetric(
 		sortbase = user_metrics.NewUserAvgOrderOngoingMetric(db)
 
 	// cost order
-	case *selling_iface.UserMetricSort_UserCostOrderMetricSort:
-		sortFieldName = sortField.UserCostOrderMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderWithdrawalMetricSort:
-		sortFieldName = sortField.UserCostOrderWithdrawalMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderWithdrawalMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderCancelledMetricSort:
-		sortFieldName = sortField.UserCostOrderCancelledMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderCancelledMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderLostMetricSort:
-		sortFieldName = sortField.UserCostOrderLostMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderLostMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderCompletedMetricSort:
-		sortFieldName = sortField.UserCostOrderCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderCompletedMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderReturnMetricSort:
-		sortFieldName = sortField.UserCostOrderReturnMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderReturnMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderReturnCompletedMetricSort:
-		sortFieldName = sortField.UserCostOrderReturnCompletedMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderReturnCompletedMetric(db)
-	case *selling_iface.UserMetricSort_UserCostOrderOngoingMetricSort:
-		sortFieldName = sortField.UserCostOrderOngoingMetricSort.String()
-		sortbase = user_metrics.NewUserCostOrderOngoingMetric(db)
+	case *selling_iface.UserMetricSort_UserCostWarehouseMetricSort:
+		sortFieldName = sortField.UserCostWarehouseMetricSort.String()
+		sortbase = user_metrics.NewUserCostWarehouseMetric(db)
+	case *selling_iface.UserMetricSort_UserCostProductOwnMetricSort:
+		sortFieldName = sortField.UserCostProductOwnMetricSort.String()
+		sortbase = user_metrics.NewUserCostProductOwnMetric(db)
+	case *selling_iface.UserMetricSort_UserCostProductCrossMetricSort:
+		sortFieldName = sortField.UserCostProductCrossMetricSort.String()
+		sortbase = user_metrics.NewUserCostProductCrossMetric(db)
 
 	// profit order
 	case *selling_iface.UserMetricSort_UserProfitOrderCreatedMetricSort:
@@ -259,6 +205,15 @@ func (s *statServiceImpl) UserStatMetric(
 	case *selling_iface.UserMetricSort_UserWithdrawalBreakdownMetricSort:
 		sortFieldName = sortField.UserWithdrawalBreakdownMetricSort.String()
 		sortbase = user_metrics.NewUserWithdrawalBreakdownMetric(db)
+	case *selling_iface.UserMetricSort_UserRevenueOrderMetricSort:
+		sortFieldName = sortField.UserRevenueOrderMetricSort.String()
+		sortbase = user_metrics.NewUserRevenueOrderMetric(db)
+	case *selling_iface.UserMetricSort_UserRevenueWarehouseAdjustmentMetricSort:
+		sortFieldName = sortField.UserRevenueWarehouseAdjustmentMetricSort.String()
+		sortbase = user_metrics.NewUserRevenueWarehouseAdjustmentMetric(db)
+	case *selling_iface.UserMetricSort_UserRevenueProductAdjustmentMetricSort:
+		sortFieldName = sortField.UserRevenueProductAdjustmentMetricSort.String()
+		sortbase = user_metrics.NewUserRevenueProductAdjustmentMetric(db)
 
 	case *selling_iface.UserMetricSort_UserAdsExpenseMetricSort:
 		sortFieldName = sortField.UserAdsExpenseMetricSort.String()
