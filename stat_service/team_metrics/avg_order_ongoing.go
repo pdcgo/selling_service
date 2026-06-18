@@ -49,7 +49,7 @@ func (t *avgOrderOngoingMetric) FetchMetric(ctx context.Context, teamIds []uint6
 		Where("o.team_id in ?", teamIds).
 		Select([]string{
 			"o.team_id",
-			"sum(o.total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
+			"sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
 			"sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as piece_per_transaction",
 		}).
 		Group("o.team_id").
@@ -75,7 +75,7 @@ func (t *avgOrderOngoingMetric) ProcessSort(ctx context.Context, tfilter *sellin
 
 	switch tsort.GetTeamAvgOrderOngoingMetricSort() {
 	case team_metric.TeamAvgOrderOngoingMetricSort_TEAM_AVG_ORDER_ONGOING_METRIC_SORT_TOTAL_PER_TRANSACTION:
-		sortField = "sum(o.total)::numeric / nullif(count(o.id), 0) as sfield"
+		sortField = "sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as sfield"
 	case team_metric.TeamAvgOrderOngoingMetricSort_TEAM_AVG_ORDER_ONGOING_METRIC_SORT_PIECE_PER_TRANSACTION:
 		sortField = "sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as sfield"
 	default:

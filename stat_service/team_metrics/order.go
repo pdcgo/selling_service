@@ -19,8 +19,7 @@ func (t *orderMetric) Query(ctx context.Context, tfilter *selling_iface.TeamStat
 	query = t.
 		db.
 		Table("orders o").
-		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
-		Where("o.status != ?", "cancel")
+		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	return
 }

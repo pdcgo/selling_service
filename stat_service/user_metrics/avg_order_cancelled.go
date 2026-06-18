@@ -62,7 +62,7 @@ func (u *avgUserOrderCancelled) FetchMetric(ctx context.Context, userIds []uint6
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
 			"o.created_by_id as user_id",
-			"sum(o.total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
+			"sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
 			"sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as piece_per_transaction",
 		}).
 		Group("o.created_by_id").
@@ -97,7 +97,7 @@ func (u *avgUserOrderCancelled) ProcessSort(ctx context.Context, ufilter *sellin
 
 	switch usort.GetUserAvgOrderCancelledMetricSort() {
 	case user_metric.UserAvgOrderCancelledMetricSort_USER_AVG_ORDER_CANCELLED_METRIC_SORT_TOTAL_PER_TRANSACTION:
-		sortfield = "sum(o.total)::numeric / nullif(count(o.id), 0) as sfield"
+		sortfield = "sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as sfield"
 	case user_metric.UserAvgOrderCancelledMetricSort_USER_AVG_ORDER_CANCELLED_METRIC_SORT_PIECE_PER_TRANSACTION:
 		sortfield = "sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as sfield"
 	}

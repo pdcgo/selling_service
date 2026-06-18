@@ -58,7 +58,7 @@ func (u *avgUserOrderOngoing) FetchMetric(ctx context.Context, userIds []uint64,
 		Where("o.created_by_id IN ?", userIds).
 		Select([]string{
 			"o.created_by_id as user_id",
-			"sum(o.total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
+			"sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as total_per_transaction",
 			"sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as piece_per_transaction",
 		}).
 		Group("o.created_by_id").
@@ -93,7 +93,7 @@ func (u *avgUserOrderOngoing) ProcessSort(ctx context.Context, ufilter *selling_
 
 	switch usort.GetUserAvgOrderOngoingMetricSort() {
 	case user_metric.UserAvgOrderOngoingMetricSort_USER_AVG_ORDER_ONGOING_METRIC_SORT_TOTAL_PER_TRANSACTION:
-		sortfield = "sum(o.total)::numeric / nullif(count(o.id), 0) as sfield"
+		sortfield = "sum(o.order_mp_total)::numeric / nullif(count(o.id), 0) as sfield"
 	case user_metric.UserAvgOrderOngoingMetricSort_USER_AVG_ORDER_ONGOING_METRIC_SORT_PIECE_PER_TRANSACTION:
 		sortfield = "sum(coalesce(pieces.units,0))::numeric / nullif(count(o.id), 0) as sfield"
 	}
