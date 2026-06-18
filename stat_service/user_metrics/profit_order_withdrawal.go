@@ -58,9 +58,9 @@ func (u *userProfitOrderWithdrawal) FetchMetric(ctx context.Context, userIds []u
 		Select([]string{
 			"o.created_by_id as user_id",
 			"sum(w.amount) - sum(o.total) as profit_withdrawal_amount",
-			"(((sum(w.amount) - sum(o.total)) / sum(o.total)) * 100) as profit_withdrawal_percent",
+			"(((sum(w.amount) - sum(o.total)) / nullif(sum(o.total), 0)) * 100) as profit_withdrawal_percent",
 			"sum(w.amount) - sum(o.order_mp_total) as profit_withdrawal_adjustment_amount",
-			"(((sum(w.amount) - sum(o.order_mp_total)) / sum(o.order_mp_total)) * 100) as profit_withdrawal_adjustment_percent",
+			"(((sum(w.amount) - sum(o.order_mp_total)) / nullif(sum(o.order_mp_total), 0)) * 100) as profit_withdrawal_adjustment_percent",
 		}).
 		Group("o.created_by_id").
 		Find(&resultList).
@@ -96,11 +96,11 @@ func (u *userProfitOrderWithdrawal) ProcessSort(ctx context.Context, ufilter *se
 	case user_metric.UserProfitOrderWithdrawalMetricSort_USER_PROFIT_ORDER_WITHDRAWAL_METRIC_SORT_PROFIT_WITHDRAWAL_AMOUNT:
 		sortfield = "sum(w.amount - o.total) as sfield"
 	case user_metric.UserProfitOrderWithdrawalMetricSort_USER_PROFIT_ORDER_WITHDRAWAL_METRIC_SORT_PROFIT_WITHDRAWAL_PERCENT:
-		sortfield = "((sum(w.amount - o.total) / sum(o.total)) * 100) as sfield"
+		sortfield = "((sum(w.amount - o.total) / nullif(sum(o.total), 0)) * 100) as sfield"
 	case user_metric.UserProfitOrderWithdrawalMetricSort_USER_PROFIT_ORDER_WITHDRAWAL_METRIC_SORT_PROFIT_WITHDRAWAL_ADJUSTMENT_AMOUNT:
 		sortfield = "sum(w.amount - o.order_mp_total) as sfield"
 	case user_metric.UserProfitOrderWithdrawalMetricSort_USER_PROFIT_ORDER_WITHDRAWAL_METRIC_SORT_PROFIT_WITHDRAWAL_ADJUSTMENT_PERCENT:
-		sortfield = "((sum(w.amount - o.order_mp_total) / sum(o.order_mp_total)) * 100) as sfield"
+		sortfield = "((sum(w.amount - o.order_mp_total) / nullif(sum(o.order_mp_total), 0)) * 100) as sfield"
 	}
 
 	query = query.

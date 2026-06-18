@@ -10,12 +10,37 @@ import (
 )
 
 type TeamMetricBase interface {
+	Query(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (*gorm.DB, error)
 	ProcessSort(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter, tsort *selling_iface.TeamMetricSort) ([]uint64, error)
 	FetchMetric(ctx context.Context, teamIds []uint64, tfilter *selling_iface.TeamStatMetricFilter) (*selling_iface.TeamMetric, error)
 }
 
+type MetricMap map[selling_iface.TeamMetricType]TeamMetricBase
+
+func (mm MetricMap) GetMetric(mtype selling_iface.TeamMetricType) (metric TeamMetricBase, err error) {
+	metric = mm[mtype]
+	if mm[mtype] == nil {
+		err = errors.New("metric:required " + mtype.String())
+	}
+	return
+}
+
+func (mm MetricMap) GetQuery(mtype selling_iface.TeamMetricType, ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (query *gorm.DB, err error) {
+	metric, err := mm.GetMetric(mtype)
+	if mm[mtype] == nil {
+		return
+	}
+	query, err = metric.Query(ctx, tfilter)
+	return
+}
+
 type commonMetric struct {
 	db *gorm.DB
+}
+
+// FetchMetric implements [TeamMetricBase].
+func (u *commonMetric) Query(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (*gorm.DB, error) {
+	panic("unimplemented")
 }
 
 // FetchMetric implements [TeamMetricBase].

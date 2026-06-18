@@ -9,47 +9,45 @@ import (
 	"gorm.io/gorm"
 )
 
-type orderMetric struct {
+var ongoingStatus = []string{"created", "process", "shipped", "courrier_shipped"}
+
+type orderOngoingMetric struct {
 	db *gorm.DB
 }
 
 // FetchMetric implements [TeamMetricBase].
-func (t *orderMetric) Query(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (query *gorm.DB, err error) {
-	trange := tfilter.Range
-	query = t.
+func (t *orderOngoingMetric) Query(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (query *gorm.DB, err error) {
+	t.
 		db.
 		Table("orders o").
-		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime()).
-		Where("o.status != ?", "cancel")
+		Where("o.status in (?)", ongoingStatus)
 
 	return
 }
 
 // FetchMetric implements [TeamMetricBase].
-func (t *orderMetric) FetchMetric(ctx context.Context, teamIds []uint64, tfilter *selling_iface.TeamStatMetricFilter) (*selling_iface.TeamMetric, error) {
+func (t *orderOngoingMetric) FetchMetric(ctx context.Context, teamIds []uint64, tfilter *selling_iface.TeamStatMetricFilter) (*selling_iface.TeamMetric, error) {
 	var err error
-	result := team_metric.TeamOrderMetric{
-		Data: map[uint64]*team_metric.TeamOrderItem{},
+	result := team_metric.TeamOrderOngoingMetric{
+		Data: map[uint64]*team_metric.TeamOrderOngoingItem{},
 	}
-	resultList := []*team_metric.TeamOrderItem{}
+	resultList := []*team_metric.TeamOrderOngoingItem{}
 
 	query, err := t.Query(ctx, tfilter)
 	if err != nil {
 		return nil, err
 	}
 
-	query = query.
+	err = query.
 		Where("o.team_id in ?", teamIds).
 		Select([]string{
 			"o.team_id",
 			"count(o.id) as transaction_count",
 			"sum(o.total) as total_amount",
 			"sum(o.order_mp_total) as mp_total_amount",
-			"max(o.created_at) as last_order_created",
+			"max(o.created_at) as last_order_ongoing",
 		}).
-		Group("o.team_id")
-
-	err = query.
+		Group("o.team_id").
 		Find(&resultList).
 		Error
 
@@ -58,34 +56,34 @@ func (t *orderMetric) FetchMetric(ctx context.Context, teamIds []uint64, tfilter
 	}
 
 	return &selling_iface.TeamMetric{
-		Data: &selling_iface.TeamMetric_TeamOrderMetric{
-			TeamOrderMetric: &result,
+		Data: &selling_iface.TeamMetric_TeamOrderOngoingMetric{
+			TeamOrderOngoingMetric: &result,
 		},
 	}, err
 }
 
 // ProcessSort implements [TeamMetricBase].
-func (t *orderMetric) ProcessSort(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter, tsort *selling_iface.TeamMetricSort) ([]uint64, error) {
+func (t *orderOngoingMetric) ProcessSort(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter, tsort *selling_iface.TeamMetricSort) ([]uint64, error) {
 	var err error
 	var teamIds []uint64
 	var sortField string
 
-	query, err := t.Query(ctx, tfilter)
-	if err != nil {
+	switch tsort.GetTeamOrderOngoingMetricSort() {
+	case team_metric.TeamOrderOngoingMetricSort_TEAM_ORDER_ONGOING_METRIC_SORT_TRANSACTION_COUNT:
+		sortField = "count(o.id) as sfield"
+	case team_metric.TeamOrderOngoingMetricSort_TEAM_ORDER_ONGOING_METRIC_SORT_TOTAL_AMOUNT:
+		sortField = "sum(o.total) as sfield"
+	case team_metric.TeamOrderOngoingMetricSort_TEAM_ORDER_ONGOING_METRIC_SORT_MP_TOTAL_AMOUNT:
+		sortField = "sum(o.order_mp_total) as sfield"
+	case team_metric.TeamOrderOngoingMetricSort_TEAM_ORDER_ONGOING_METRIC_SORT_LAST_ORDER_ONGOING:
+		sortField = "max(o.created_at) as sfield"
+	default:
+		err = errors.New("team order ongoing metric sort invalid sort type")
 		return nil, err
 	}
 
-	switch tsort.GetTeamOrderMetricSort() {
-	case team_metric.TeamOrderMetricSort_TEAM_ORDER_METRIC_SORT_TRANSACTION_COUNT:
-		sortField = "count(o.id) as sfield"
-	case team_metric.TeamOrderMetricSort_TEAM_ORDER_METRIC_SORT_TOTAL_AMOUNT:
-		sortField = "sum(o.total) as sfield"
-	case team_metric.TeamOrderMetricSort_TEAM_ORDER_METRIC_SORT_MP_TOTAL_AMOUNT:
-		sortField = "sum(o.order_mp_total) as sfield"
-	case team_metric.TeamOrderMetricSort_TEAM_ORDER_METRIC_SORT_LAST_ORDER_CREATED:
-		sortField = "max(o.created_at) as sfield"
-	default:
-		err = errors.New("team order metric sort invalid sort type")
+	query, err := t.Query(ctx, tfilter)
+	if err != nil {
 		return nil, err
 	}
 
@@ -114,6 +112,6 @@ func (t *orderMetric) ProcessSort(ctx context.Context, tfilter *selling_iface.Te
 	return teamIds, err
 }
 
-func NewOrderMetric(db *gorm.DB) TeamMetricBase {
-	return &orderMetric{db}
+func NewOrderOngoingMetric(db *gorm.DB) TeamMetricBase {
+	return &orderOngoingMetric{db}
 }
