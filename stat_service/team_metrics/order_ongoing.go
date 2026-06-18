@@ -17,7 +17,7 @@ type orderOngoingMetric struct {
 
 // FetchMetric implements [TeamMetricBase].
 func (t *orderOngoingMetric) Query(ctx context.Context, tfilter *selling_iface.TeamStatMetricFilter) (query *gorm.DB, err error) {
-	t.
+	query = t.
 		db.
 		Table("orders o").
 		Where("o.status in (?)", ongoingStatus)
