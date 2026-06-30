@@ -10,9 +10,9 @@ require (
 	connectrpc.com/connect v1.20.0
 	github.com/google/wire v0.7.0
 	github.com/pdcgo/event_source v1.0.9
-	github.com/pdcgo/san_collection v1.0.4
-	github.com/pdcgo/schema v1.0.146
-	github.com/pdcgo/shared v1.0.134
+	github.com/pdcgo/san_collection v1.0.5
+	github.com/pdcgo/schema v1.1.2
+	github.com/pdcgo/shared v1.0.136
 	github.com/redis/go-redis/v9 v9.19.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.7.0
@@ -65,6 +65,8 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
+	github.com/golang/mock v1.7.0-rc.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
@@ -94,6 +96,7 @@ require (
 	github.com/pdcgo/v2_gots_sdk v1.3.10 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.25 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.54.0 // indirect
@@ -101,6 +104,7 @@ require (
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/tkrajina/typescriptify-golang-structs v0.2.0 // indirect
+	github.com/twilio/twilio-go v1.30.9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/wargasipil/data_processing v0.0.0-20260420085126-0b978af04e6f // indirect
