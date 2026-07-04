@@ -45,7 +45,7 @@ func InitializeApp() (*cli.Command, error) {
 	sellingPushHttpHandler := selling_service.NewSellingPushHttpHandler(sellingPushHandler)
 	redisClient := NewRedisDatabase(appConfig)
 	cacheManager := san_caches.NewRedisCacheManager(redisClient)
-	registerHandler := selling_service.NewRegister(serveMux, db, authorization, defaultInterceptor, client, cache, sellingPushHttpHandler, cacheManager)
+	registerHandler := selling_service.NewRegister(serveMux, db, appConfig, authorization, defaultInterceptor, client, cache, sellingPushHttpHandler, cacheManager)
 	registerReflectFunc := custom_connect.NewRegisterReflect(serveMux)
 	serviceApiFunc := NewServiceApiFunc(serveMux, registerHandler, registerReflectFunc)
 	batchConfig := NewBatchConfig()
