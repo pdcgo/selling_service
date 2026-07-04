@@ -6,13 +6,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
-	"github.com/pdcgo/shared/db_models"
+	"github.com/pdcgo/selling_service/selling_models"
 	"gorm.io/gorm"
 )
 
 // shopInTeam verifies a shop exists and belongs to the given team.
 func shopInTeam(db *gorm.DB, shopID, teamID uint64) error {
-	var shop db_models.V2Shop
+	var shop selling_models.Shop
 	err := db.
 		Select("id").
 		Where("id = ? AND team_id = ?", shopID, teamID).
@@ -45,7 +45,7 @@ func (s *shopServiceImpl) ShopUserUpdate(
 
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for _, uid := range pay.AddedUserIds {
-			var existing db_models.V2ShopUser
+			var existing selling_models.ShopUser
 			e := tx.
 				Unscoped().
 				Where("shop_id = ? AND user_id = ?", pay.ShopId, uid).
@@ -58,7 +58,7 @@ func (s *shopServiceImpl) ShopUserUpdate(
 
 			if existing.ID == 0 {
 				e = tx.
-					Create(&db_models.V2ShopUser{
+					Create(&selling_models.ShopUser{
 						ShopID: pay.ShopId,
 						TeamID: pay.TeamId,
 						UserID: uid,
@@ -73,7 +73,7 @@ func (s *shopServiceImpl) ShopUserUpdate(
 			// Reactivate a previously removed access row.
 			e = tx.
 				Unscoped().
-				Model(&db_models.V2ShopUser{}).
+				Model(&selling_models.ShopUser{}).
 				Where("id = ?", existing.ID).
 				Update("deleted_at", nil).
 				Error
@@ -85,7 +85,7 @@ func (s *shopServiceImpl) ShopUserUpdate(
 		for _, uid := range pay.RemovedUserIds {
 			e := tx.
 				Where("shop_id = ? AND user_id = ?", pay.ShopId, uid).
-				Delete(&db_models.V2ShopUser{}).
+				Delete(&selling_models.ShopUser{}).
 				Error
 			if e != nil {
 				return e

@@ -5,7 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
-	"github.com/pdcgo/shared/db_models"
+	"github.com/pdcgo/selling_service/selling_models"
 )
 
 // ShopUserList implements [selling_ifaceconnect.ShopServiceHandler]. Lists the users
@@ -28,7 +28,7 @@ func (s *shopServiceImpl) ShopUserList(
 		Data: []*selling_iface.ShopUser{},
 	}
 
-	var rows []*db_models.V2ShopUser
+	var rows []*selling_models.ShopUser
 	err = db.
 		Where("shop_id = ?", pay.ShopId).
 		Order("id ASC").

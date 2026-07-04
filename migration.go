@@ -1,6 +1,7 @@
 package selling_service
 
 import (
+	"github.com/pdcgo/selling_service/selling_models"
 	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
@@ -20,8 +21,8 @@ func NewMigrationHandler() MigrationHandler {
 			&db_models.RestockSupplierTemp{},
 			&db_models.V2Supplier{},
 			&db_models.V2SupplierMarketplace{},
-			&db_models.V2Shop{},
-			&db_models.V2ShopUser{},
+			&selling_models.Shop{},
+			&selling_models.ShopUser{},
 		)
 		return err
 	}

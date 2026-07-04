@@ -7,7 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
-	"github.com/pdcgo/shared/db_models"
+	"github.com/pdcgo/selling_service/selling_models"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,7 @@ func (s *shopServiceImpl) ShopDelete(
 
 	db := s.db.WithContext(ctx)
 	err := db.
-		Model(db_models.V2Shop{}).
+		Model(selling_models.Shop{}).
 		Where("id = ? AND team_id = ?", pay.Id, pay.TeamId).
 		Updates(map[string]interface{}{
 			"shop_username": gorm.Expr("shop_username || ?", "_deleted_"+ts),

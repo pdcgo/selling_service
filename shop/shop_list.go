@@ -8,8 +8,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/selling_service/selling_models"
 	"github.com/pdcgo/shared/db_connect"
-	"github.com/pdcgo/shared/db_models"
 	"gorm.io/gorm"
 )
 
@@ -30,10 +30,10 @@ func (s *shopServiceImpl) ShopList(
 
 	db := s.db.WithContext(ctx)
 
-	var rows []*db_models.V2Shop
+	var rows []*selling_models.Shop
 	paginated, pageInfo, err := db_connect.SetPaginationQuery(db, func() (*gorm.DB, error) {
 		query := db.
-			Model(&db_models.V2Shop{}).
+			Model(&selling_models.Shop{}).
 			Scopes(func(d *gorm.DB) *gorm.DB {
 
 				if pay.TeamId > 0 {

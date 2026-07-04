@@ -5,7 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
-	"github.com/pdcgo/shared/db_models"
+	"github.com/pdcgo/selling_service/selling_models"
 )
 
 // ShopCreate implements [selling_ifaceconnect.ShopServiceHandler].
@@ -15,7 +15,7 @@ func (s *shopServiceImpl) ShopCreate(
 ) (*connect.Response[selling_iface.ShopCreateResponse], error) {
 	pay := req.Msg
 
-	shop := &db_models.V2Shop{
+	shop := &selling_models.Shop{
 		TeamID:          pay.TeamId,
 		ShopName:        pay.ShopName,
 		ShopUsername:    pay.ShopUsername,

@@ -7,8 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/schema/services/common/v1"
 	"github.com/pdcgo/schema/services/selling_iface/v1"
+	"github.com/pdcgo/selling_service/selling_models"
 	"github.com/pdcgo/selling_service/shop"
-	"github.com/pdcgo/shared/db_models"
 	"github.com/pdcgo/shared/pkg/moretest"
 	"github.com/pdcgo/shared/pkg/moretest/moretest_mock"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ import (
 // the handlers — these tests call the impl directly to validate CRUD/DB behavior.
 
 func migrateShop(t *testing.T, tx *gorm.DB) {
-	assert.NoError(t, tx.AutoMigrate(&db_models.V2Shop{}, &db_models.V2ShopUser{}))
+	assert.NoError(t, tx.AutoMigrate(&selling_models.Shop{}, &selling_models.ShopUser{}))
 }
 
 func TestShopCrud(t *testing.T) {
@@ -81,7 +81,7 @@ func TestShopCrud(t *testing.T) {
 				}))
 				assert.NoError(t, err)
 
-				var updated db_models.V2Shop
+				var updated selling_models.Shop
 				assert.NoError(t, tx.First(&updated, created.Msg.Id).Error)
 				assert.Equal(t, "Toko Berkah Jaya", updated.ShopName)
 				assert.Equal(t, int32(common.MarketplaceType_MARKETPLACE_TYPE_TOKOPEDIA), updated.MarketplaceType)
@@ -175,7 +175,7 @@ func TestShopUserUpdate(t *testing.T) {
 				assert.NoError(t, err)
 
 				var activeCount int64
-				assert.NoError(t, tx.Model(&db_models.V2ShopUser{}).
+				assert.NoError(t, tx.Model(&selling_models.ShopUser{}).
 					Where("shop_id = ? AND user_id = ?", shopID, uint64(10)).
 					Count(&activeCount).Error)
 				assert.Equal(t, int64(1), activeCount)
