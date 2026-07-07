@@ -1,4 +1,4 @@
-# Database Schema & Model
+# Database Schema & Model For Selling Service.
 
 
 
@@ -23,3 +23,7 @@ Schema and Model that have :
 ## Database Model guideline
 1. for model database dont import from legacy model in `shared`
 2. write all definition in `./selling_models`
+
+<br><br><br><br><br><br>
+
+# Database Schema & Model For Revenue Service.

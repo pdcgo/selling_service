@@ -7,8 +7,10 @@ Status for this development is still in progress and not completely take over le
 1. for database schema related, read this [Database Schema](database-schema.md).
 
 
-## Authentication & Authorization
-1. Use v2 roling system. not legacy system. [Read This](../../user_service/docs/readme.md)
+## Authentication & Authorization.
+1. Use v2 roling system. not legacy system. for complete reference read [this](../../user_service/docs/readme.md#authentication--authorization)
+2. use interceptor that live in [here](../../user_service/access_interceptors/interceptor.go)
+3. DON'T use legacy interface on [this](../../shared/interfaces/authorization_iface/authorization.go)
 
 ## Connect RPC Spec
 `SellingService` heavyly depend `connect-rpc` to serve and creating apis and grpc. Why we use `connectrpc` because its can be two mode as pure grpc and grpc-web that interact like web. And also supported http2. This service have several rpc:
@@ -20,8 +22,8 @@ Status for this development is still in progress and not completely take over le
     - Update Shop that named `ShopUpdate`
 
     for User management That Who can Access The Shop.
-    - list user that have access on shop that named `ShopUserList`
-    - for remove and add user in list of shop. rpc that named `ShopUserUpdate`
+    - list user that have access on shop that named `ShopUserList`.
+    - for remove and add user in list of shop. rpc that named `ShopUserUpdate`.
 
 
 
@@ -30,3 +32,23 @@ Status for this development is still in progress and not completely take over le
 2. how dealing team_id and username soft delete: 
     - to prevent error when same shop reinserted, before delete update username to `[username]_deleted_[unix_second_timestamp]`
 3. ensure this rpc using v2 roling system & they have access role definition on proto
+
+<br><br><br><br><br><br>
+
+# Revenue Service.
+
+## General Brief.
+For this moment this service live in `./selling_service/revenue` and sharing models with selling service. 
+1. the service named `RevenueService`.
+2. the proto definition is under `selling_iface`
+
+
+## Authentication & Authorization.
+1. Use v2 roling system. not legacy system. for complete reference read [this](../../user_service/docs/readme.md#authentication--authorization)
+2. use interceptor that live in [here](../../user_service/access_interceptors/interceptor.go)
+3. DON'T use legacy interface on [this](../../shared/interfaces/authorization_iface/authorization.go)
+
+## Connect RPC Spec
+`RevenueService` heavyly depend `connect-rpc` to serve and creating apis and grpc. Why we use `connectrpc` because its can be two mode as pure grpc and grpc-web that interact like web. And also supported http2.
+
+1. For first initiate just add rpc `HelloWorld`.
