@@ -23,6 +23,8 @@ func NewMigrationHandler() MigrationHandler {
 			&db_models.V2SupplierMarketplace{},
 			&selling_models.Shop{},
 			&selling_models.ShopUser{},
+			&selling_models.Withdrawal{},
+			&selling_models.WithdrawalLog{},
 		)
 		return err
 	}

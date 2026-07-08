@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/san_collection/san_caches"
 	"github.com/pdcgo/schema/services/selling_iface/v1/selling_ifaceconnect"
+	"github.com/pdcgo/selling_service/revenue"
 	"github.com/pdcgo/selling_service/services"
 	"github.com/pdcgo/selling_service/shop"
 	"github.com/pdcgo/selling_service/stat_service"
@@ -66,6 +67,17 @@ func NewRegister(
 		path, handler = selling_ifaceconnect.NewSellingStatServiceHandler(stat_service.NewSellingStatService(db, cacheMgr), defaultInterceptor)
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.SellingStatServiceName)
+
+		// v2 roling: RevenueService requests are gated by their
+		// (role_base.v1.request_policy) via the access interceptor, same as ShopService.
+		revenueRoleOpt := connect.WithInterceptors(access_interceptors.NewAccessInterceptor(db, cfg.JwtSecret, cacheMgr))
+		path, handler = selling_ifaceconnect.NewRevenueServiceHandler(
+			revenue.NewRevenueService(db),
+			defaultInterceptor,
+			revenueRoleOpt,
+		)
+		mux.Handle(path, handler)
+		grpcReflects = append(grpcReflects, selling_ifaceconnect.RevenueServiceName)
 
 		mux.HandleFunc("/selling/push", sellingHttpPushHandler)
 

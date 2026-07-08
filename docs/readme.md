@@ -59,9 +59,15 @@ For this moment this service live in `./selling_service/revenue` and sharing mod
 
 2. Rpc for Revenue Related. 
     - for creating revenue that named `RevenueCreate`.
-
+    - for updating revenue that named `RevenueUpdate`.
+    - for updating revenue that named `RevenueDelete`.
+    - for view revenue change log that named `RevenueLogList`.
 
 ## Withdrawal RPC.
+
+### General.
+1. Withdrawal just can be edited if created_at > 7 days ago.
+
 ### Structure.
 1. Schema. i just listed most important field related withdrawal.
     - withdrawal :
@@ -73,7 +79,8 @@ For this moment this service live in `./selling_service/revenue` and sharing mod
         Amount              float64 
         FundedAt            time.Time
         RefId               string               <-- that unique together with source, when its delete, change RefId with [ref_id]_deleted_[unix timestamp second]
-        Source              WithdrawalSource     <-- from proto definition generated
+        Source              WithdrawalSource     <-- from proto definition generated, source is manual or importer
+        Note                string
         DeletedAt           time.Time            <-- for soft delete
         UpdatedAt           time.Time
         CreatedAt           time.Time
@@ -84,7 +91,8 @@ For this moment this service live in `./selling_service/revenue` and sharing mod
         WithdrawalId    uint64                               <-- foreign key with Withdrawal
         ShopId          uint64
         TeamId          uint64
-        ChangeType      WithdrawalLogChangeType              <-- from proto definition generated. it has type: change_amount & deleted
+        ChangeType      WithdrawalLogChangeType              <-- from proto definition generated. it has type: change_amount, deleted, and created
+        Note            string
         Amount          float64 
         CreatedAt       time.Time
     }
@@ -95,41 +103,90 @@ For this moment this service live in `./selling_service/revenue` and sharing mod
 1. Flow `WithdrawalCreate`. 
     ```mermaid
     stateDiagram-v2
+    [*] --> Open_Transaction
+    Open_Transaction --> Payload
+    Finish_transaction
 
-    [*] test
+    Payload --> Have_Manual_Source
+    Payload --> Have_Importer_Source
+    Have_Manual_Source --> Withdrawal: RefId must not empty
+    Have_Importer_Source --> Withdrawal: calculate RefId from #shopid/year/month/day
+    Withdrawal --> WithdrawalLog: create
+    Withdrawal --> Finish_transaction: save
+    WithdrawalLog --> Finish_transaction: save
+    Finish_transaction --> [*]
+
     ```
 
-2. The flow inside RPC.
-
+2. Flow `WithdrawalUpdate`.
     ```mermaid
     stateDiagram-v2
+
+    [*] --> Open_Transaction
+    Open_Transaction --> Payload
+    Payload --> WithdrawalLog
+    Payload --> Update_Withdrawal
+    WithdrawalLog --> Finish_transaction: save
+    Update_Withdrawal --> Finish_transaction: atomic
     
-  
-    [*] --> WithdrawalShopStateDaily: lock or create & lock
-    WithdrawalShopStateDaily --> Finish_Transaction
-    [*] --> WithdrawalCreateRequest
-    
-    WithdrawalCreateRequest --> New_Withdrawal_Log: buat log
-    New_Withdrawal_Log --> Calculate_Diff
-    New_Withdrawal_Log --> Last_Withdrawal_Log: get wd_ref_id last inserted
-    Last_Withdrawal_Log --> Calculate_Diff
-    Calculate_Diff --> WithdrawalShopStateDaily: update change -/+ in WithdrawalShopStateDaily
-    
+    Finish_transaction --> [*]
 
 
-    Finish_Transaction --> [*]
-    
     ```
 
-2. Inside `WithdrawalCreateRequest`.
-    - `shop_id`
-    - `amount`
-    - `funded_at`
-    - `wd_ref_id`
-    - `note`
-    - `source`, the source can be:
-        - `importer`
-        - `manual`
+3. Flow `WithdrawalDelete`.
+    ```mermaid
+    stateDiagram-v2
+
+    [*] --> Open_Transaction
+    Open_Transaction --> Payload
+    Payload --> WithdrawalLog
+    Payload --> Delete_Withdrawal
+    WithdrawalLog --> Finish_transaction: save
+    Delete_Withdrawal --> Finish_transaction
+    
+    Finish_transaction --> [*]
+
+
+    ```
+
+
+## Revenue RPC. [defered to build, plan still not final]
+
+### Structure.
+1. Schema. i just listed most important field related Revenue.
+    - OrderRevenue:
+        ```
+        type OrderRevenue struct {
+            Id  uint64                   <-- primary key with auto increment
+            OrderId             uint64
+            ShopId              uint64
+            TeamId              uint64
+            Amount              float64 
+            FundedAt            time.Time
+            RefId               string               <-- that unique together with source, when its delete, change RefId with [ref_id]_deleted_[unix timestamp second]
+            Source              WithdrawalSource     <-- from proto definition generated, source is manual or importer
+            DeletedAt           time.Time            <-- for soft delete
+            UpdatedAt           time.Time
+            CreatedAt           time.Time
+
+        }
+        
+        ```
+    - OrderRevenueLog
+        ```
+        type OrderRevenueLog struct {
+            Id  uint64                   <-- primary key with auto increment
+            CreatedAt           time.Time
+
+        }
+
+        ```
+    - AdjustmentRevenue
+
+
+### Flow.
+1. Flow `RevenueCreate`
 
 
     
