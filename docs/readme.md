@@ -49,6 +49,87 @@ For this moment this service live in `./selling_service/revenue` and sharing mod
 3. DON'T use legacy interface on [this](../../shared/interfaces/authorization_iface/authorization.go)
 
 ## Connect RPC Spec
-`RevenueService` heavyly depend `connect-rpc` to serve and creating apis and grpc. Why we use `connectrpc` because its can be two mode as pure grpc and grpc-web that interact like web. And also supported http2.
+`RevenueService` heavyly depend `connect-rpc` to serve and creating apis and grpc. Why we use `connectrpc` because its can be two mode as pure grpc and grpc-web that interact like web. And also supported http2. This service have several rpc:
 
-1. For first initiate just add rpc `HelloWorld`.
+1. Rpc for Withdrawal Related.
+    - for creating withdrawal that named `WithdrawalCreate`.
+    - for updating withdrawal that named `WithdrawalUpdate`.
+    - for updating withdrawal that named `WithdrawalDelete`.
+    - for view withdrawal change log that named `WithdrawalLogList`.
+
+2. Rpc for Revenue Related. 
+    - for creating revenue that named `RevenueCreate`.
+
+
+## Withdrawal RPC.
+### Structure.
+1. Schema. i just listed most important field related withdrawal.
+    - withdrawal :
+    ```
+    type Withdrawal struct {
+        Id                  uint64                   <-- primary key with auto increment
+        ShopId              uint64
+        TeamId              uint64
+        Amount              float64 
+        FundedAt            time.Time
+        RefId               string               <-- that unique together with source, when its delete, change RefId with [ref_id]_deleted_[unix timestamp second]
+        Source              WithdrawalSource     <-- from proto definition generated
+        DeletedAt           time.Time            <-- for soft delete
+        UpdatedAt           time.Time
+        CreatedAt           time.Time
+    }
+
+    type WithdrawalLog struct {
+        Id              uint64                               <-- primary key with auto increment
+        WithdrawalId    uint64                               <-- foreign key with Withdrawal
+        ShopId          uint64
+        TeamId          uint64
+        ChangeType      WithdrawalLogChangeType              <-- from proto definition generated. it has type: change_amount & deleted
+        Amount          float64 
+        CreatedAt       time.Time
+    }
+
+    ```
+
+### Flow.
+1. Flow `WithdrawalCreate`. 
+    ```mermaid
+    stateDiagram-v2
+
+    [*] test
+    ```
+
+2. The flow inside RPC.
+
+    ```mermaid
+    stateDiagram-v2
+    
+  
+    [*] --> WithdrawalShopStateDaily: lock or create & lock
+    WithdrawalShopStateDaily --> Finish_Transaction
+    [*] --> WithdrawalCreateRequest
+    
+    WithdrawalCreateRequest --> New_Withdrawal_Log: buat log
+    New_Withdrawal_Log --> Calculate_Diff
+    New_Withdrawal_Log --> Last_Withdrawal_Log: get wd_ref_id last inserted
+    Last_Withdrawal_Log --> Calculate_Diff
+    Calculate_Diff --> WithdrawalShopStateDaily: update change -/+ in WithdrawalShopStateDaily
+    
+
+
+    Finish_Transaction --> [*]
+    
+    ```
+
+2. Inside `WithdrawalCreateRequest`.
+    - `shop_id`
+    - `amount`
+    - `funded_at`
+    - `wd_ref_id`
+    - `note`
+    - `source`, the source can be:
+        - `importer`
+        - `manual`
+
+
+    

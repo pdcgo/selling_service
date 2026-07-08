@@ -27,3 +27,8 @@ Schema and Model that have :
 <br><br><br><br><br><br>
 
 # Database Schema & Model For Revenue Service.
+
+Schema and Model that have:
+1. Withdrawal log
+2. Order Revenue Log
+
