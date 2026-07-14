@@ -25,6 +25,10 @@ func NewMigrationHandler() MigrationHandler {
 			&selling_models.ShopUser{},
 			&selling_models.Withdrawal{},
 			&selling_models.WithdrawalLog{},
+			&selling_models.Order{},
+			&selling_models.OrderItem{},
+			&selling_models.OrderCustomer{},
+			&selling_models.OrderStatusLog{},
 		)
 		return err
 	}

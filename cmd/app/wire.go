@@ -33,6 +33,7 @@ func InitializeApp() (*cli.Command, error) {
 		NewAuthorization,
 		selling_service.NewSellingPushHandler,
 		selling_service.NewSellingPushHttpHandler,
+		selling_service.NewOrderDependencyClients,
 		selling_service.NewRegister,
 
 		NewBatchHandler,

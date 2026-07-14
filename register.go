@@ -7,6 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pdcgo/san_collection/san_caches"
 	"github.com/pdcgo/schema/services/selling_iface/v1/selling_ifaceconnect"
+	selling_ifacev3connect "github.com/pdcgo/schema/services/selling_iface/v3/selling_ifaceconnect"
+	"github.com/pdcgo/selling_service/order"
 	"github.com/pdcgo/selling_service/revenue"
 	"github.com/pdcgo/selling_service/services"
 	"github.com/pdcgo/selling_service/shop"
@@ -33,6 +35,7 @@ func NewRegister(
 	cache ware_cache.Cache,
 	sellingHttpPushHandler SellingPushHttpHandler,
 	cacheMgr san_caches.CacheManager,
+	orderClients OrderDependencyClients,
 ) RegisterHandler {
 
 	return func() ServiceReflectNames {
@@ -78,6 +81,17 @@ func NewRegister(
 		)
 		mux.Handle(path, handler)
 		grpcReflects = append(grpcReflects, selling_ifaceconnect.RevenueServiceName)
+
+		// v3 OrderService (selling_iface.v3) — the next-gen order system (design:
+		// plans/brainstroming.md). Team-scoped via the same v2 roling interceptor.
+		orderRoleOpt := connect.WithInterceptors(access_interceptors.NewAccessInterceptor(db, cfg.JwtSecret, cacheMgr))
+		path, handler = selling_ifacev3connect.NewOrderServiceHandler(
+			order.NewOrderService(db, orderClients.Inventory, orderClients.Product, orderClients.Warehouse),
+			defaultInterceptor,
+			orderRoleOpt,
+		)
+		mux.Handle(path, handler)
+		grpcReflects = append(grpcReflects, selling_ifacev3connect.OrderServiceName)
 
 		mux.HandleFunc("/selling/push", sellingHttpPushHandler)
 
