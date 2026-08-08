@@ -22,55 +22,56 @@ func NewHistoryStockOrderMetric(
 	switch trange.Type {
 	case common.StatTimeType_STAT_TIME_TYPE_DAY:
 		selects = append(selects,
-			"date_trunc('day', it.created) as t",
+			"date_trunc('day', o.created_at) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_WEEK:
 		selects = append(selects,
-			"date_trunc('week', it.created) as t",
+			"date_trunc('week', o.created_at) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_MONTH:
 		selects = append(selects,
-			"date_trunc('month', it.created) as t",
+			"date_trunc('month', o.created_at) as t",
 		)
 	case common.StatTimeType_STAT_TIME_TYPE_YEAR:
 		selects = append(selects,
-			"date_trunc('year', it.created) as t",
+			"date_trunc('year', o.created_at) as t",
 		)
 	}
 
 	selects = append(selects,
-		"count(iti.inv_transaction_id) as transaction_count",
-		"sum(iti.count) as piece_count",
-		"sum(iti.total) as piece_amount",
+		"count(oi.order_id) as transaction_count",
+		"sum(oi.count) as piece_count",
+		"sum(oi.total) as piece_amount",
 
-		"count(iti.inv_transaction_id) filter (where it.team_id = s.team_id) as own_transaction_count",
-		"sum(iti.count) filter (where it.team_id = s.team_id) as own_piece_count",
-		"sum(iti.total) filter (where it.team_id = s.team_id) as own_piece_amount",
+		"count(oi.order_id) filter (where p.team_id = o.team_id) as own_transaction_count",
+		"sum(oi.count) filter (where p.team_id = o.team_id) as own_piece_count",
+		"sum(oi.total) filter (where p.team_id = o.team_id) as own_piece_amount",
 
-		"count(iti.inv_transaction_id) filter (where it.team_id != s.team_id) as cross_transaction_count",
-		"sum(iti.count) filter (where it.team_id != s.team_id) as cross_piece_count",
-		"sum(iti.total) filter (where it.team_id != s.team_id) as cross_piece_amount",
+		"count(oi.order_id) filter (where p.team_id != o.team_id) as cross_transaction_count",
+		"sum(oi.count) filter (where p.team_id != o.team_id) as cross_piece_count",
+		"sum(oi.total) filter (where p.team_id != o.team_id) as cross_piece_amount",
 	)
 
 	query := db.
-		Table("inv_tx_items iti").
-		Joins("left join inv_transactions it on it.id = iti.inv_transaction_id").
-		Joins("left join skus s on s.id = iti.sku_id").
-		// Where("it.status != 'cancel'").
-		Where("it.type = 'order'").
-		Where("it.created between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
+		Table("order_items oi").
+		Joins("left join orders o on o.id = oi.order_id").
+		Joins("left join products p on p.id = oi.product_id").
+		// Where("o.status != 'cancel'").
+		Where("o.created_at between ? and ?", trange.Start.AsTime(), trange.End.AsTime())
 
 	if filter.WarehouseId != 0 {
-		query = query.Where("it.warehouse_id = ?", filter.WarehouseId)
+		query = query.
+			Joins("left join inv_transactions it on it.id = o.invertory_tx_id").
+			Where("it.warehouse_id = ?", filter.WarehouseId)
 	}
 
 	if filter.TeamId != 0 {
-		query = query.Where("s.team_id = ?", filter.TeamId)
+		query = query.Where("p.team_id = ?", filter.TeamId)
 	}
 
 	if filter.ProductFilter != nil {
 		productFilter := filter.ProductFilter
-		query = query.Where("s.product_id = ?", productFilter.ProductId)
+		query = query.Where("p.id = ?", productFilter.ProductId)
 	}
 
 	err = query.
